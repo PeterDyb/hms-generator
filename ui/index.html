@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HMS-generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="/static/app.js" defer></script>
+  <style>
+    .agent-output {
+      font-family: ui-monospace, monospace;
+      font-size: 0.78rem;
+      line-height: 1.6;
+      max-height: 220px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .prose { color: #1a1a1a; }
+    .prose h1 { font-size: 1.75rem; font-weight: 700; margin: 0 0 0.5rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem; }
+    .prose h2 { font-size: 1.3rem; font-weight: 700; margin: 2rem 0 0.6rem; color: #111827; }
+    .prose h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.4rem; color: #374151; }
+    .prose h4 { font-size: 1rem; font-weight: 600; margin: 1.2rem 0 0.3rem; color: #4b5563; }
+    .prose p  { margin: 0.6rem 0 0.8rem; line-height: 1.75; }
+    .prose ul { list-style: disc; padding-left: 1.5rem; margin: 0.5rem 0 0.8rem; }
+    .prose ol { list-style: decimal; padding-left: 1.5rem; margin: 0.5rem 0 0.8rem; }
+    .prose li { margin: 0.25rem 0; line-height: 1.7; }
+    .prose strong { font-weight: 700; }
+    .prose em { font-style: italic; }
+    .prose code { background: #f3f4f6; padding: 0.1em 0.35em; border-radius: 3px; font-size: 0.85em; font-family: ui-monospace, monospace; }
+    .prose pre  { background: #f3f4f6; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 0.8rem 0; font-size: 0.85rem; }
+    .prose blockquote { border-left: 4px solid #d1d5db; padding-left: 1rem; margin: 0.8rem 0; color: #6b7280; font-style: italic; }
+    .prose hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.5rem 0; }
+    .prose table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+    .prose th { background: #f9fafb; font-weight: 600; padding: 0.6rem 0.8rem; border: 1px solid #e5e7eb; text-align: left; }
+    .prose td { padding: 0.5rem 0.8rem; border: 1px solid #e5e7eb; }
+    .prose tr:hover td { background: #f9fafb; }
+    @media print {
+      body > * { display: none !important; }
+      #print-area { display: block !important; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <div id="print-area" style="display:none" class="p-10 max-w-4xl mx-auto prose"></div>
+
+  <!-- Tilgangsport — vises til gyldig nøkkel er oppgitt -->
+  <div id="auth-gate" class="fixed inset-0 bg-gray-900/60 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl shadow-xl p-8 max-w-sm w-full mx-4">
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">Tilgangsnøkkel</h2>
+      <p class="text-sm text-gray-500 mb-4">Oppgi tilgangsnøkkelen du har fått tildelt for å bruke HMS-generatoren.</p>
+      <form id="auth-form" class="space-y-3">
+        <input id="auth-key" type="password" autocomplete="off" required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Tilgangsnøkkel" />
+        <p id="auth-error" class="text-xs text-red-600 hidden">Ugyldig nøkkel — prøv igjen.</p>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium">
+          Logg inn
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <header class="bg-white border-b border-gray-200 px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center gap-3">
+      <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">H</div>
+      <div>
+        <h1 class="font-semibold text-gray-900">HMS-generator</h1>
+        <p class="text-xs text-gray-500">AI-drevet håndbok for norske bedrifter</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-8">
+
+    <!-- Skjema -->
+    <div id="form-section">
+      <div class="bg-white rounded-xl border border-gray-200 p-8 max-w-2xl mx-auto shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-900 mb-1">Generer HMS-håndbok</h2>
+        <p class="text-sm text-gray-500 mb-6">Fyll inn informasjon om bedriften. Harvey, Donna, Mike, Louis og Jessica tar seg av resten.</p>
+
+        <form id="company-form" class="space-y-5">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Bedriftsnavn *</label>
+              <input name="bedriftsnavn" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Eksempel AS" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Organisasjonsnummer</label>
+              <input name="organisasjonsnummer" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="123 456 789" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Antall ansatte *</label>
+              <input name="antall_ansatte" type="number" required min="1" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="25" />
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">NACE-kode / Bransje *</label>
+              <select id="nace_kode" name="nace_kode" required
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                <option value="" disabled selected>Laster bransjer …</option>
+              </select>
+              <p class="text-xs text-gray-400 mt-1">Velg den NACE-koden som best beskriver bedriftens hovedvirksomhet</p>
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Kontaktperson / daglig leder</label>
+              <input name="kontaktperson" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ola Nordmann" />
+            </div>
+          </div>
+
+          <div class="border-t border-gray-100 pt-4">
+            <p class="text-sm font-medium text-gray-700 mb-3">Spesielle arbeidsforhold</p>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <input type="checkbox" name="har_skiftarbeid" class="rounded" />
+                Skiftarbeid
+              </label>
+              <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <input type="checkbox" name="har_farlige_stoffer" class="rounded" />
+                Farlige stoffer
+              </label>
+              <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <input type="checkbox" name="har_tungt_arbeid" class="rounded" />
+                Tungt arbeid
+              </label>
+              <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <input type="checkbox" name="har_utvidet_egenmelding" class="rounded" />
+                Utvidet egenmeldingsordning er innført
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Spesielle risikoer eller forhold</label>
+            <textarea name="spesielle_risikoer" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="F.eks. arbeid i høyder, kjøring av tunge maskiner, håndtering av mat ..."></textarea>
+          </div>
+
+          <div class="flex items-center justify-between border-t border-gray-100 pt-4">
+            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input type="checkbox" name="oensker_personalhaandbok" checked class="rounded" />
+              Generer også personalhåndbok
+            </label>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors">
+              Start generering
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Fremdrift -->
+    <div id="progress-section" class="hidden">
+      <div class="mb-6 flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900" id="progress-title">Genererer håndbøker …</h2>
+          <p class="text-sm text-gray-500 mt-0.5" id="progress-subtitle">Agentene jobber nå</p>
+        </div>
+        <button id="btn-reset" class="text-sm text-gray-500 hover:text-gray-700 underline">Ny generering</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div id="card-harvey" class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm opacity-40 transition-opacity duration-500">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">⚖️</span>
+              <span class="font-semibold text-gray-900">Harvey</span>
+              <span class="text-xs text-gray-400">Lovverk og krav</span>
+            </div>
+            <span id="status-harvey" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Venter</span>
+          </div>
+          <div id="output-harvey" class="agent-output bg-gray-50 rounded-lg p-3 text-gray-600 min-h-16"></div>
+        </div>
+
+        <div id="card-donna" class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm opacity-40 transition-opacity duration-500">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">📋</span>
+              <span class="font-semibold text-gray-900">Donna</span>
+              <span class="text-xs text-gray-400">Kapittelplan</span>
+            </div>
+            <span id="status-donna" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Venter</span>
+          </div>
+          <div id="output-donna" class="agent-output bg-gray-50 rounded-lg p-3 text-gray-600 min-h-16"></div>
+        </div>
+
+        <div id="card-mike" class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm opacity-40 transition-opacity duration-500">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">✍️</span>
+              <span class="font-semibold text-gray-900">Mike</span>
+              <span class="text-xs text-gray-400">Kapittelinnhold</span>
+            </div>
+            <span id="status-mike" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Venter</span>
+          </div>
+          <div id="output-mike" class="agent-output bg-gray-50 rounded-lg p-3 text-gray-600 min-h-16"></div>
+        </div>
+
+        <div id="card-louis" class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm opacity-40 transition-opacity duration-500">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🔍</span>
+              <span class="font-semibold text-gray-900">Louis</span>
+              <span class="text-xs text-gray-400">Kvalitetskontroll</span>
+            </div>
+            <span id="status-louis" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Venter</span>
+          </div>
+          <div id="output-louis" class="agent-output bg-gray-50 rounded-lg p-3 text-gray-600 min-h-16"></div>
+        </div>
+
+        <div id="card-jessica" class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm opacity-40 transition-opacity duration-500 md:col-span-2">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">👔</span>
+              <span class="font-semibold text-gray-900">Jessica</span>
+              <span class="text-xs text-gray-400">Endelig godkjenning</span>
+            </div>
+            <span id="status-jessica" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Venter</span>
+          </div>
+          <div id="output-jessica" class="agent-output bg-gray-50 rounded-lg p-3 text-gray-600 min-h-16"></div>
+        </div>
+      </div>
+
+      <!-- Vedlegg og skjemaer -->
+      <div id="attachments-section" class="hidden">
+        <div class="border-t border-gray-200 pt-6 mb-8">
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Vedlegg og skjemaer</h3>
+          <p class="text-sm text-gray-500 mb-4">Klar til bruk — fyll inn og tilpass for din bedrift.</p>
+          <div id="files-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+        </div>
+      </div>
+
+      <!-- Ferdige håndbøker -->
+      <div id="handbooks-section" class="hidden">
+        <div class="border-t border-gray-200 pt-8">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-xl font-semibold text-gray-900">Ferdige håndbøker</h2>
+          </div>
+
+          <div class="flex gap-2 mb-5" id="handbook-tabs">
+            <button data-tab="hms" id="tab-hms"
+              class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white">
+              HMS-håndbok
+            </button>
+            <button data-tab="personal" id="tab-personal"
+              class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-600 border border-gray-200 hidden">
+              Personalhåndbok
+            </button>
+          </div>
+
+          <div id="handbook-hms" class="handbook-panel">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-gray-50">
+                <span class="text-sm font-medium text-gray-600">HMS-håndbok</span>
+                <div class="flex gap-2">
+                  <button data-type="hms" data-format="md"   class="btn-download text-xs px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 font-medium">Markdown</button>
+                  <button data-type="hms" data-format="pdf"  class="btn-download text-xs px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 font-medium">PDF</button>
+                  <button data-type="hms" data-format="json" class="btn-download text-xs px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 font-medium">JSON</button>
+                  <button data-type="hms" id="copy-hms" class="btn-copy text-xs px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 font-medium">Kopier</button>
+                </div>
+              </div>
+              <div class="p-8 md:p-12 max-w-4xl">
+                <div id="hms-content" class="prose text-sm leading-relaxed"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="handbook-personal" class="handbook-panel hidden">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-gray-50">
+                <span class="text-sm font-medium text-gray-600">Personalhåndbok</span>
+                <div class="flex gap-2">
+                  <button data-type="personal" data-format="md"   class="btn-download text-xs px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 font-medium">Markdown</button>
+                  <button data-type="personal" data-format="pdf"  class="btn-download text-xs px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 font-medium">PDF</button>
+                  <button data-type="personal" data-format="json" class="btn-download text-xs px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 font-medium">JSON</button>
+                  <button data-type="personal" id="copy-personal" class="btn-copy text-xs px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 font-medium">Kopier</button>
+                </div>
+              </div>
+              <div class="p-8 md:p-12 max-w-4xl">
+                <div id="personal-content" class="prose text-sm leading-relaxed"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+</body>
+</html>
