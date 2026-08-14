@@ -248,6 +248,76 @@ def ik_dekning_feil(md: str) -> list[str]:
     return feil
 
 
+# ─── Vedleggsoversikt ────────────────────────────────────────────────────────
+
+# Vedleggene er ikke løse filer — de er en del av HMS-dokumentasjonen, og
+# håndboken skal vise hvilke skjemaer som finnes, hva de brukes til og hvor.
+# «dok» sier hvilken håndbok vedlegget hører til.
+VEDLEGG = [
+    {"dok": "hms", "fil": "Risikovurdering", "formater": "xlsx, docx, pdf",
+     "tittel": "Risikovurdering",
+     "bruk": "Kartlegging av farer med sannsynlighet, konsekvens og tiltak. Oppdateres årlig og ved endringer.",
+     "hjemmel": "IK-forskriften § 5 andre ledd nr. 6"},
+    {"dok": "hms", "fil": "Handlingsplan_HMS", "formater": "docx",
+     "tittel": "Handlingsplan HMS",
+     "bruk": "Tiltakene fra risikovurderingen med ansvarlig og frist.",
+     "hjemmel": "IK-forskriften § 5 andre ledd nr. 6"},
+    {"dok": "hms", "fil": "Avviksmelding", "formater": "docx",
+     "tittel": "Avviksmelding",
+     "bruk": "Fylles ut ved avvik, uønskede hendelser og nesten-ulykker.",
+     "hjemmel": "IK-forskriften § 5 andre ledd nr. 7"},
+    {"dok": "hms", "fil": "Sjekkliste_Vernerunde", "formater": "docx",
+     "tittel": "Sjekkliste vernerunde",
+     "bruk": "Brukes ved vernerunder sammen med verneombudet.",
+     "hjemmel": "AML § 3-1, IK-forskriften § 5 andre ledd nr. 6"},
+    {"dok": "hms", "fil": "Årlig_HMS_revisjon", "formater": "docx, pdf",
+     "tittel": "Årlig gjennomgang av HMS-systemet",
+     "bruk": "Fylles ut én gang per år for å dokumentere at internkontrollen fungerer. "
+             "Dette er dokumentet Arbeidstilsynet ber om ved tilsyn.",
+     "hjemmel": "IK-forskriften § 5 andre ledd nr. 8"},
+    {"dok": "hms", "fil": "Oppfølgingsplan_Sykefravær", "formater": "docx",
+     "tittel": "Oppfølgingsplan ved sykefravær",
+     "bruk": "Utarbeides senest innen 4 uker fra første fraværsdag.",
+     "hjemmel": "AML § 3-4, § 4-6"},
+    {"dok": "personal", "fil": "Arbeidsavtale_mal", "formater": "docx",
+     "tittel": "Arbeidsavtale (mal)",
+     "bruk": "Brukes ved alle ansettelser. Skal foreligge skriftlig innen 7 dager.",
+     "hjemmel": "AML § 14-5, § 14-6"},
+    {"dok": "personal", "fil": "Egenmeldingsskjema", "formater": "docx",
+     "tittel": "Egenmeldingsskjema",
+     "bruk": "Leveres nærmeste leder ved retur til arbeid etter egenmeldt fravær.",
+     "hjemmel": "Ftrl. § 8-24"},
+    {"dok": "personal", "fil": "Taushetserklæring", "formater": "docx",
+     "tittel": "Taushetserklæring",
+     "bruk": "Signeres av alle ansatte ved oppstart.",
+     "hjemmel": "GDPR art. 5, § 32"},
+]
+
+
+def vedleggsoversikt_markdown(safe_navn: str, dok_type: str) -> str:
+    """
+    Vedleggsoversikt som eget kapittel i håndboken — så bedriften ser hvilke
+    skjemaer som hører til, hva de brukes til og hvilket krav de dekker.
+    """
+    rader = [v for v in VEDLEGG if v["dok"] == dok_type]
+    if not rader:
+        return ""
+    linjer = [
+        "## Vedlegg og skjemaer",
+        "",
+        "Skjemaene under er en del av HMS-dokumentasjonen vår og følger denne håndboken. "
+        "De skal være tilgjengelige for alle ansatte, og utfylte skjemaer arkiveres.",
+        "",
+        "| Vedlegg | Hva det brukes til | Filnavn | Hjemmel |",
+        "|---|---|---|---|",
+    ]
+    for v in rader:
+        linjer.append(
+            f"| {v['tittel']} | {v['bruk']} | {safe_navn}_{v['fil']} ({v['formater']}) | {v['hjemmel']} |"
+        )
+    return "\n".join(linjer)
+
+
 # ─── Risikodata ──────────────────────────────────────────────────────────────
 
 def risiko_rader(harvey_data: dict | None) -> list[dict]:

@@ -49,7 +49,9 @@ Stikkordene skal være konkrete nok til at Mike kan skrive ferdig tekst uten å 
 9. **Opplæring og kompetanse** — HMS-opplæring for leder (AML § 3-5) og verneombud (AML § 6-5), nyansattrutine
 10. **Beredskap, brann og førstehjelp** — nødnumre, evakuering, brannøvelse årlig (AML § 4-4)
 11. **Gravide og ammende arbeidstakere** — risikovurdering, tilrettelegging, ammefri (AML § 12-8)
-12. **Revisjon og forbedring** — årlig gjennomgang av HMS-systemet (IK-forskriften § 5 andre ledd nr. 8)
+12. **Revisjon og forbedring** — årlig gjennomgang av HMS-systemet: hva som gjennomgås,
+    når på året, hvem som deltar, og at gjennomgangen dokumenteres skriftlig i vedlegget
+    «Årlig gjennomgang av HMS-systemet» (IK-forskriften § 5 andre ledd nr. 8)
 13. **Bransjespesifikke kapitler** — ett kapittel per krav fra Harvey med `alvorlighet = "høyt"` eller `"svært høyt"`. Konkrete prosedyrer, ikke generelle fraser.
 
 ## Personalhåndboken — obligatoriske kapitler (hvis bestilt)

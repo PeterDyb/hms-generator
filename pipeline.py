@@ -1227,11 +1227,19 @@ def run_mike(session_id: str, plan: dict, harvey_data: dict, company_info: dict
         raise
 
 
-def _sett_sammen(company_info: dict, tittel: str, kapitler: list[tuple[dict, str]]) -> str:
-    """Deterministisk sammenstilling: forside + innholdsfortegnelse + kapitler + endringslogg."""
+def _sett_sammen(company_info: dict, tittel: str, kapitler: list[tuple[dict, str]],
+                 dok_type: str = "hms") -> str:
+    """
+    Deterministisk sammenstilling: forside + innholdsfortegnelse + kapitler
+    + vedleggsoversikt + endringslogg.
+    """
     navn = company_info.get("bedriftsnavn", "Bedriften")
     dato = time.strftime("%d.%m.%Y")
+    safe_navn = navn.replace(" ", "_")
+    vedlegg = eksport.vedleggsoversikt_markdown(safe_navn, dok_type)
     toc = "\n".join(f"{kap['nummer']}. {kap['tittel']}" for kap, _ in kapitler)
+    if vedlegg:
+        toc += "\n\nVedlegg og skjemaer"
     deler = [
         f"# {tittel}\n## {navn}\n\n"
         f"**Versjon:** 1.0\n**Dato:** {dato}\n**Ansvarlig:** Daglig leder\n"
@@ -1240,6 +1248,8 @@ def _sett_sammen(company_info: dict, tittel: str, kapitler: list[tuple[dict, str
         f"## Innholdsfortegnelse\n\n{toc}",
     ]
     deler.extend(tekst for _, tekst in kapitler)
+    if vedlegg:
+        deler.append(vedlegg)
     deler.append(
         "## Endringslogg\n\n"
         "| Versjon | Dato | Beskrivelse | Godkjent av |\n"
@@ -1285,7 +1295,7 @@ def run_louis(session_id: str, doc: str, dok_navn: str, harvey_data: dict, compa
 
 
 def _louis_runde(session_id: str, doc: str, kapitler: list[tuple[dict, str]], dok_navn: str,
-                 dok_tittel: str, harvey_data: dict, company_info: dict
+                 dok_tittel: str, harvey_data: dict, company_info: dict, dok_type: str
                  ) -> tuple[str, list[tuple[dict, str]]]:
     """Louis-QA med maks én reparasjonsrunde via Mike. Returnerer (dokument, kapitler)."""
     rapport = run_louis(session_id, doc, dok_navn, harvey_data, company_info)
@@ -1321,7 +1331,7 @@ def _louis_runde(session_id: str, doc: str, kapitler: list[tuple[dict, str]], do
         _fail_run(run_id, str(e))
         raise
 
-    doc = _sett_sammen(company_info, dok_tittel, nye)
+    doc = _sett_sammen(company_info, dok_tittel, nye, dok_type)
     problemer = _kvalitetsfeil(doc, [k for k, _ in nye], dok_navn)
     if problemer:
         raise PipelineError(f"{dok_navn} besto ikke kvalitetsporten etter reparasjon: " + "; ".join(problemer))
@@ -1388,25 +1398,25 @@ def run(session_id: str) -> None:
         hms_kap, personal_kap = run_mike(session_id, plan, harvey_data, company_info)
 
         # 4. Deterministisk sammenstilling + kvalitetsport
-        hms_doc = _sett_sammen(company_info, "HMS-HÅNDBOK", hms_kap)
+        hms_doc = _sett_sammen(company_info, "HMS-HÅNDBOK", hms_kap, "hms")
         problemer = _kvalitetsfeil(hms_doc, [k for k, _ in hms_kap], "HMS-håndboken")
         if problemer:
             raise PipelineError("HMS-håndboken besto ikke kvalitetsporten: " + "; ".join(problemer))
 
         personal_doc = ""
         if personal_kap:
-            personal_doc = _sett_sammen(company_info, "PERSONALHÅNDBOK", personal_kap)
+            personal_doc = _sett_sammen(company_info, "PERSONALHÅNDBOK", personal_kap, "personal")
             problemer = _kvalitetsfeil(personal_doc, [k for k, _ in personal_kap], "personalhåndboken")
             if problemer:
                 raise PipelineError("Personalhåndboken besto ikke kvalitetsporten: " + "; ".join(problemer))
 
         # 5. Louis-QA med maks én reparasjonsrunde per dokument
         hms_doc, hms_kap = _louis_runde(session_id, hms_doc, hms_kap, "HMS-håndboken",
-                                        "HMS-HÅNDBOK", harvey_data, company_info)
+                                        "HMS-HÅNDBOK", harvey_data, company_info, "hms")
         if personal_doc:
             personal_doc, personal_kap = _louis_runde(
                 session_id, personal_doc, personal_kap, "personalhåndboken",
-                "PERSONALHÅNDBOK", harvey_data, company_info)
+                "PERSONALHÅNDBOK", harvey_data, company_info, "personal")
 
         # 6. Jessicas endelige verifisering — feiler høyt hvis lovlisten ikke er dekket
         run_jessica(session_id, harvey_data, hms_doc, personal_doc, company_info)

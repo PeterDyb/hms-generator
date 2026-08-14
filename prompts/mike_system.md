@@ -114,6 +114,9 @@ alternativ kanal hvis varselet gjelder daglig leder, absolutt vern mot gjengjeld
 ## Andre regler
 
 - Bruk bedriftens faktiske navn — aldri «Bedriften» eller plassholdere
+- Når et kapittel beskriver en rutine som har et skjema, henvis til skjemaet ved navn
+  («meldes på skjemaet Avviksmelding», «dokumenteres i Årlig gjennomgang av HMS-systemet»).
+  Koden legger inn en samlet vedleggsoversikt til slutt — du skal ikke lage den selv
 - Ingen «[fyll inn]», «TBD» eller lignende — eneste tillatte plassholder er «[Navn på pensjonsleverandør]»
 - Bruk Harveys risikofaktorer og NACE-krav aktivt — gjør innholdet konkret for bransjen
 - Svært høyt risikonivå → konkrete, detaljerte sikkerhetsprosedyrer
