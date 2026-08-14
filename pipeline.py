@@ -879,6 +879,7 @@ def _kvalitetsfeil(doc: str, kapitler: list[dict], dok_navn: str = "") -> list[s
             feil.append(f"Kapittel mangler i dokumentet: {overskrift}")
     if dok_navn == "HMS-håndboken":
         feil.extend(eksport.hms_maal_feil(doc))
+        feil.extend(eksport.ik_dekning_feil(doc))
     return feil
 
 
@@ -1030,6 +1031,9 @@ def _mock_donna(company_info: dict) -> str:
          "stikkord": ["meldeplikt", "behandling", "lukking"], "hjemler": ["AML § 5-1"]},
         {"nummer": 5, "tittel": "Beredskap, brann og førstehjelp", "formaal": "Være forberedt på alvorlige hendelser",
          "stikkord": ["nødnumre", "evakuering", "brannøvelse"], "hjemler": ["AML § 4-4"]},
+        {"nummer": 6, "tittel": "Revisjon og forbedring", "formaal": "Årlig gjennomgang av HMS-systemet",
+         "stikkord": ["årlig gjennomgang", "revisjon", "forbedringstiltak"],
+         "hjemler": ["IK-forskriften § 5"]},
     ]
     personal = []
     if company_info.get("oensker_personalhaandbok", True):
@@ -1429,6 +1433,7 @@ def run(session_id: str) -> None:
         # 8. Risikovurdering (xlsx + json/docx/pdf) og Word-skjemaer
         generate_excel_risikovurdering(company_info, json.dumps(harvey_data, ensure_ascii=False), session_id)
         eksport.skriv_risikovurdering(company_info, harvey_data, output_dir, safe_name)
+        eksport.skriv_arlig_revisjon(company_info, harvey_data, output_dir, safe_name)
         generate_word_forms(company_info, session_id)
 
         _supabase.table("sessions").update({"status": "completed"}).eq("id", session_id).execute()

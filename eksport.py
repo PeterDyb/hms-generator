@@ -162,6 +162,92 @@ def hms_maal_feil(md: str, minimum: int = 3) -> list[str]:
     return feil
 
 
+# ─── IK-forskriften § 5: dokumentasjonskravene ───────────────────────────────
+
+# Internkontrollforskriften § 5 andre ledd nr. 4–8 er de punktene som SKAL
+# dokumenteres skriftlig. Hvert krav må ha et EGET kapittel — det er ikke nok at
+# ordene finnes spredt i standardtekst. Derfor kreves treff både i kapittel-
+# overskriften og i kapittelinnholdet. Hver gruppe er synonymer (minst én må treffe).
+IK_DOKUMENTASJONSKRAV = [
+    {
+        "nr": 4,
+        "navn": "Mål for helse, miljø og sikkerhet",
+        "overskrift": ("hms-policy", "hms-mål", "policy", "innledning", "målsetting"),
+        "innhold": [("mål",), ("frist", "innen", "ansvarlig")],
+    },
+    {
+        "nr": 5,
+        "navn": "Oversikt over organisasjon, ansvar, oppgaver og myndighet",
+        "overskrift": ("ansvar", "organisering", "organisasjon", "roller"),
+        "innhold": [("ansvar",), ("daglig leder", "verneombud")],
+    },
+    {
+        "nr": 6,
+        "navn": "Kartlegging av farer, risikovurdering, planer og tiltak",
+        "overskrift": ("risiko", "kartlegging"),
+        "innhold": [("risiko",), ("tiltak",)],
+    },
+    {
+        "nr": 7,
+        "navn": "Rutiner for å avdekke, rette opp og forebygge avvik",
+        "overskrift": ("avvik",),
+        "innhold": [("avvik",), ("melde", "meldeplikt", "rapporter", "rette opp", "korriger")],
+    },
+    {
+        "nr": 8,
+        "navn": "Systematisk overvåking og gjennomgang av internkontrollen",
+        "overskrift": ("revisjon", "gjennomgang", "forbedring", "evaluering", "oppfølging"),
+        "innhold": [("gjennomgå", "gjennomgang", "revisjon"), ("årlig", "hvert år", "én gang per år")],
+    },
+]
+
+
+def _kapittelseksjoner(md: str) -> list[tuple[str, str]]:
+    """Del dokumentet i (overskrift, kropp) per «## »-kapittel."""
+    seksjoner: list[tuple[str, str]] = []
+    overskrift, kropp = None, []
+    for linje in md.split("\n"):
+        if re.match(r"^##\s+\S", linje) and not linje.startswith("###"):
+            if overskrift is not None:
+                seksjoner.append((overskrift, "\n".join(kropp)))
+            overskrift, kropp = linje.lstrip("#").strip(), []
+        elif overskrift is not None:
+            kropp.append(linje)
+    if overskrift is not None:
+        seksjoner.append((overskrift, "\n".join(kropp)))
+    return seksjoner
+
+
+def ik_dekning_feil(md: str) -> list[str]:
+    """
+    Kvalitetsport: hvert dokumentasjonskrav i IK-forskriften § 5 andre ledd nr. 4–8
+    må ha et eget kapittel — treff kreves både i overskrift og innhold, slik at
+    generell standardtekst ikke kan «dekke» et krav som mangler.
+    """
+    seksjoner = [(o.lower(), k.lower()) for o, k in _kapittelseksjoner(md)]
+    if not seksjoner:
+        return ["Dokumentet har ingen kapitler («## »-overskrifter) å kontrollere"]
+
+    feil = []
+    for krav in IK_DOKUMENTASJONSKRAV:
+        kandidater = [k for o, k in seksjoner if any(h in o for h in krav["overskrift"])]
+        if not kandidater:
+            feil.append(
+                f"IK-forskriften § 5 andre ledd nr. {krav['nr']} ({krav['navn']}): "
+                f"mangler et kapittel om temaet"
+            )
+            continue
+        if not any(
+            all(any(ord_ in kropp for ord_ in gruppe) for gruppe in krav["innhold"])
+            for kropp in kandidater
+        ):
+            feil.append(
+                f"IK-forskriften § 5 andre ledd nr. {krav['nr']} ({krav['navn']}): "
+                f"kapitlet finnes, men innholdet dekker ikke kravet"
+            )
+    return feil
+
+
 # ─── Risikodata ──────────────────────────────────────────────────────────────
 
 def risiko_rader(harvey_data: dict | None) -> list[dict]:
@@ -311,7 +397,8 @@ def _docx_sidenummer(seksjon) -> None:
     felt("NUMPAGES")
 
 
-def til_docx(md: str, path: Path, bedriftsnavn: str, landskap: bool = False) -> Path | None:
+def til_docx(md: str, path: Path, bedriftsnavn: str, landskap: bool = False,
+             sideskift_per_kapittel: bool = True) -> Path | None:
     """Render markdown til et Word-dokument klart til utskrift og signering."""
     try:
         from docx import Document
@@ -351,7 +438,7 @@ def til_docx(md: str, path: Path, bedriftsnavn: str, landskap: bool = False) -> 
             h = doc.add_heading(blokk["tekst"], level=nivaa)
             for run in h.runs:
                 run.font.color.rgb = RGBColor(*BLAA)
-            if nivaa == 1:
+            if nivaa == 1 and sideskift_per_kapittel:
                 h.paragraph_format.page_break_before = True
 
         elif blokk["type"] == "avsnitt":
@@ -377,14 +464,20 @@ def til_docx(md: str, path: Path, bedriftsnavn: str, landskap: bool = False) -> 
                 run.bold = True
                 run.font.size = Pt(9)
             for r, rad in enumerate(blokk["rader"], 1):
+                tom_celle = False
                 for c in range(len(headers)):
                     celle = t.rows[r].cells[c]
                     celle.text = ""
                     verdi = rad[c] if c < len(rad) else ""
+                    if not _fjern_markup(verdi):
+                        tom_celle = True
                     for bit, fet in _inline_deler(verdi):
                         run = celle.paragraphs[0].add_run(bit)
                         run.bold = fet
                         run.font.size = Pt(9)
+                if tom_celle:
+                    # Skal fylles ut for hånd — gi raden skrivehøyde
+                    t.rows[r].height = Cm(0.8)
             doc.add_paragraph().paragraph_format.space_after = Pt(4)
 
         elif blokk["type"] == "hr":
@@ -431,7 +524,7 @@ def _fjern_markup(tekst: str) -> str:
 
 
 def til_pdf(md: str, path: Path, bedriftsnavn: str, dokumenttittel: str,
-            landskap: bool = False) -> Path | None:
+            landskap: bool = False, sideskift_per_kapittel: bool = True) -> Path | None:
     """Render markdown til PDF — samme blokker som Word-versjonen."""
     try:
         from reportlab.lib import colors
@@ -499,7 +592,7 @@ def til_pdf(md: str, path: Path, bedriftsnavn: str, dokumenttittel: str,
                 flyt.append(Paragraph(tekst, stiler["tittel"]))
                 flyt.append(Spacer(1, 10))
             elif nivaa == 2:
-                if not forste_kapittel:
+                if not forste_kapittel and sideskift_per_kapittel:
                     flyt.append(PageBreak())
                 forste_kapittel = False
                 flyt.append(Paragraph(tekst, stiler["h1"]))
@@ -526,8 +619,7 @@ def til_pdf(md: str, path: Path, bedriftsnavn: str, dokumenttittel: str,
                 ])
             bredder = _kolonnebredder(headers, blokk["rader"], ncols, tilgjengelig)
 
-            t = Table(data, colWidths=bredder, repeatRows=1)
-            t.setStyle(TableStyle([
+            stil = [
                 ("BACKGROUND", (0, 0), (-1, 0), blaa),
                 ("GRID", (0, 0), (-1, -1), 0.4, colors.Color(0.7, 0.7, 0.7)),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -535,7 +627,14 @@ def til_pdf(md: str, path: Path, bedriftsnavn: str, dokumenttittel: str,
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
                 ("ROWBACKGROUNDS", (0, 1), (-1, -1),
                  [colors.white, colors.Color(0.96, 0.97, 0.99)]),
-            ]))
+            ]
+            # Rader med tomme felt skal fylles ut for hånd — gi dem skrivehøyde
+            for r, rad in enumerate(blokk["rader"], 1):
+                if any(not _fjern_markup(rad[c] if c < len(rad) else "") for c in range(ncols)):
+                    stil.append(("TOPPADDING", (0, r), (-1, r), 9))
+                    stil.append(("BOTTOMPADDING", (0, r), (-1, r), 9))
+            t = Table(data, colWidths=bredder, repeatRows=1)
+            t.setStyle(TableStyle(stil))
             flyt.append(KeepTogether(t) if len(data) <= 8 else t)
             flyt.append(Spacer(1, 8))
 
@@ -596,9 +695,137 @@ def skriv_risikovurdering(company_info: dict, harvey_data: dict | None,
     filer.append(skriv_json(risiko_json(company_info, harvey_data),
                             output_dir / f"{safe_navn}_Risikovurdering.json"))
     for path in (
-        til_docx(md, output_dir / f"{safe_navn}_Risikovurdering.docx", navn, landskap=True),
+        til_docx(md, output_dir / f"{safe_navn}_Risikovurdering.docx", navn,
+                 landskap=True, sideskift_per_kapittel=False),
         til_pdf(md, output_dir / f"{safe_navn}_Risikovurdering.pdf", navn,
-                f"Risikovurdering — {navn}", landskap=True),
+                f"Risikovurdering — {navn}", landskap=True, sideskift_per_kapittel=False),
+    ):
+        if path:
+            filer.append(path)
+    return filer
+
+
+def _arlig_revisjon_markdown(company_info: dict, harvey_data: dict | None) -> str:
+    """
+    Årlig gjennomgang av internkontrollen — IK-forskriften § 5 andre ledd nr. 8.
+    Dette er dokumentet Arbeidstilsynet ber om for å se at systemet faktisk brukes.
+    """
+    navn = company_info.get("bedriftsnavn", "Bedriften")
+    aar = time.strftime("%Y")
+    linjer = [
+        "# ÅRLIG GJENNOMGANG AV HMS-SYSTEMET",
+        f"## {navn}",
+        f"**Gjennomgangsår:** {aar}  |  **Hjemmel:** IK-forskriften § 5 andre ledd nr. 8",
+        "",
+        "Internkontrollen skal gjennomgås systematisk minst én gang per år for å bekrefte "
+        "at den fungerer som forutsatt. Fyll ut skjemaet i fellesskap med verneombud, "
+        "og arkiver det som dokumentasjon.",
+        "",
+        "## 1. Deltakere og dato",
+        "",
+        "| Rolle | Navn | Til stede |",
+        "|---|---|---|",
+        "| Daglig leder |  |  |",
+        "| Verneombud |  |  |",
+        "| Øvrige deltakere |  |  |",
+        "",
+        "| Dato for gjennomgang | Forrige gjennomgang |",
+        "|---|---|",
+        "|  |  |",
+        "",
+        "## 2. Dokumentasjonskravene i IK-forskriften § 5",
+        "",
+        "Kontroller at hvert krav er oppfylt, oppdatert og tilgjengelig for de ansatte.",
+        "",
+        "| Nr | Krav | Oppfylt (ja/nei) | Sist oppdatert | Kommentar |",
+        "|---|---|---|---|---|",
+    ]
+    for krav in IK_DOKUMENTASJONSKRAV:
+        linjer.append(f"| {krav['nr']} | {krav['navn']} |  |  |  |")
+    linjer += [
+        "",
+        "## 3. HMS-målene fra i fjor",
+        "",
+        "| Mål | Måltall | Oppnådd? | Tiltak videre |",
+        "|---|---|---|---|",
+        "|  |  |  |  |",
+        "|  |  |  |  |",
+        "|  |  |  |  |",
+        "",
+        "## 4. Avvik og hendelser siste år",
+        "",
+        "| Antall meldte avvik | Antall lukket | Alvorlige hendelser meldt Arbeidstilsynet |",
+        "|---|---|---|",
+        "|  |  |  |",
+        "",
+        "**Gjentakende avvik og hva vi gjør med dem:**",
+        "",
+        "| Gjentakende avvik | Årsak | Tiltak | Ansvarlig |",
+        "|---|---|---|---|",
+        "|  |  |  |  |",
+        "|  |  |  |  |",
+        "",
+        "## 5. Risikovurdering og vernerunder",
+        "",
+        "| Kontrollpunkt | Status | Dato | Kommentar |",
+        "|---|---|---|---|",
+        "| Risikovurderingen er oppdatert |  |  |  |",
+        "| Vernerunder gjennomført som planlagt |  |  |  |",
+        "| Tiltak fra handlingsplanen er gjennomført |  |  |  |",
+        "| Nye risikoforhold er vurdert |  |  |  |",
+    ]
+    risikoer = risiko_rader(harvey_data)
+    if risikoer:
+        linjer += [
+            "",
+            "**Bransjespesifikke risikoforhold som skal vurderes særskilt:**",
+            "",
+        ]
+        linjer += [f"- {r['risiko']} — {r['tiltak']}" for r in risikoer[:10]]
+    linjer += [
+        "",
+        "## 6. Opplæring og medvirkning",
+        "",
+        "| Kontrollpunkt | Status | Kommentar |",
+        "|---|---|---|",
+        "| HMS-opplæring for daglig leder er gjennomført (AML § 3-5) |  |  |",
+        "| Verneombudet har fått opplæring (AML § 6-5) |  |  |",
+        "| Nyansatte har fått HMS-introduksjon |  |  |",
+        "| De ansatte er informert om endringer i rutinene |  |  |",
+        "",
+        "## 7. Konklusjon",
+        "",
+        "**Fungerer internkontrollen som forutsatt?**   Ja ☐   Delvis ☐   Nei ☐",
+        "",
+        "**Nye HMS-mål og tiltak for neste år:**",
+        "",
+        "| Mål | Måltall | Frist | Ansvarlig |",
+        "|---|---|---|---|",
+        "|  |  |  |  |",
+        "|  |  |  |  |",
+        "|  |  |  |  |",
+        "",
+        "## 8. Signatur",
+        "",
+        "| Rolle | Navn | Dato | Signatur |",
+        "|---|---|---|---|",
+        "| Daglig leder |  |  |  |",
+        "| Verneombud |  |  |  |",
+    ]
+    return "\n".join(linjer)
+
+
+def skriv_arlig_revisjon(company_info: dict, harvey_data: dict | None,
+                         output_dir: Path, safe_navn: str) -> list[Path]:
+    """Skjema for den årlige gjennomgangen av internkontrollen (DOCX + PDF)."""
+    navn = company_info.get("bedriftsnavn", "Bedriften")
+    md = _arlig_revisjon_markdown(company_info, harvey_data)
+    filer = []
+    for path in (
+        til_docx(md, output_dir / f"{safe_navn}_Årlig_HMS_revisjon.docx", navn,
+                 sideskift_per_kapittel=False),
+        til_pdf(md, output_dir / f"{safe_navn}_Årlig_HMS_revisjon.pdf", navn,
+                f"Årlig HMS-revisjon — {navn}", sideskift_per_kapittel=False),
     ):
         if path:
             filer.append(path)
