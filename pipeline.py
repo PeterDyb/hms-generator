@@ -20,7 +20,7 @@ _supabase = create_client(os.environ["SUPABASE_URL"], _SUPABASE_KEY)
 MOCK_MODE   = os.getenv("MOCK_MODE", "false").lower() == "true"
 MODEL       = "claude-sonnet-4-6"
 TEMPERATURE = 0.2  # compliance-dokumenter skal være deterministiske
-MAX_TOKENS  = {"harvey": 4096, "donna": 8192, "mike": 8192, "louis": 4096, "jessica": 4096}
+MAX_TOKENS  = {"harvey": 4096, "donna": 8192, "mike": 8192, "louis": 8192, "jessica": 8192}
 MIN_KAPITTEL_TEGN = 400
 PROMPTS_DIR = Path(__file__).parent / "prompts"
 
