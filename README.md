@@ -21,8 +21,8 @@ Brukerinput (skjema)
 │ Mike ✍️      │   Skriver ferdig tekst (lengde, plassholdere, overskrift sjekkes)
 └──────┬───────┘
        ▼
-┌──────────────┐   Deterministisk: forside, innholdsfortegnelse, endringslogg
-│ KODE 🔧      │   + kvalitetsport: kapitteldekning, plassholdere, hjemmelskontroll
+┌──────────────┐   Deterministisk: forside, innholdsfortegnelse, endringslogg,
+│ KODE 🔧      │   vedleggsoversikt + kvalitetsport (se «Kvalitetsporter»)
 └──────┬───────┘
        ▼
 ┌──────────────┐   Strukturert funnliste; funn → Mike skriver om (maks 1 runde)
@@ -33,11 +33,57 @@ Brukerinput (skjema)
 │ Jessica 👔   │   Endelig verifisering — ellers stoppes leveransen
 └──────┬───────┘
        ▼
-HMS-håndbok + personalhåndbok (Markdown) + risikovurdering (Excel) + 7 skjemaer (Word)
+HMS-håndbok + personalhåndbok + risikovurdering + årlig revisjonsskjema + 7 skjemaer
 ```
 
 Feiler et kvalitetskrav, stopper pipelinen med tydelig feilmelding —
 det leveres aldri ufullstendige eller avkuttede dokumenter.
+
+## Leveranse
+
+Alt havner i `output/<session_id>/`, prefikset med bedriftsnavn og dato.
+
+| Dokument | Formater | Hjemmel / formål |
+|---|---|---|
+| HMS-håndbok | `md`, `json`, `docx`, `pdf` | IK-forskriften § 5 andre ledd nr. 4–8 |
+| Personalhåndbok | `md`, `json`, `docx`, `pdf` | AML kap. 2A, 14, ferieloven, OTP |
+| Risikovurdering | `xlsx`, `json`, `docx`, `pdf` | IK-forskriften § 5 andre ledd nr. 6 |
+| Årlig gjennomgang av HMS-systemet | `docx`, `pdf` | IK-forskriften § 5 andre ledd nr. 8 |
+| 7 utfyllbare skjemaer | `docx` | AML § 3-1, § 3-4, § 14-5, ftrl. § 8-24, GDPR |
+
+**JSON-formatet** er maskinlesbart med dokumentmeta, kapitler og hjemler — laget
+for videre integrasjon (kundeportal, avvikssystem, arkiv).
+
+De sju skjemaene: avviksmelding, sjekkliste vernerunde, handlingsplan HMS,
+oppfølgingsplan sykefravær (HMS) — arbeidsavtale, egenmeldingsskjema,
+taushetserklæring (personal). Skjemaene er ikke løse filer på en disk: håndboken
+får et eget **vedleggskapittel** som viser hvert skjema med bruksområde, filnavn
+og hjemmel, slik at dokumentasjonen henger sammen ved tilsyn.
+
+## Kvalitetsporter
+
+Portene er kode, ikke modellvurderinger — de kan ikke overtales bort.
+
+**Per kapittel** (alt Mike skriver): riktig overskrift, minstelengde,
+ingen gjenglemte plassholdere.
+
+**Per sammensatt dokument** (både HMS- og personalhåndbok):
+- Alle planlagte kapitler finnes i dokumentet
+- Ingen plassholdere noe sted
+
+**Kun HMS-håndboken:**
+- **Målbare HMS-mål** — minst 3 mål i tabell (Mål | Måltall | Frist | Ansvarlig),
+  der måltall og frist må inneholde tall (IK-forskriften § 5 andre ledd nr. 4)
+- **IK-dekning** — hvert av kravene nr. 4–8 må ha et *eget* kapittel, med treff
+  både i overskrift og innhold, så generell standardtekst ikke kan «dekke» et
+  krav som mangler
+
+**Hjemmelskontroll:** koden finner §-referanser i dokumentet som ikke kan spores
+til Harveys lovliste eller kjent-listen, og sender dem inn i Louis' kontroll som
+flagg — Louis avgjør om de er hallusinerte eller legitime.
+
+**Hard feil:** `stop_reason == "max_tokens"` fra modellen avbryter kjøringen.
+Et avkuttet compliance-dokument er verre enn ingen leveranse.
 
 ## Kom i gang
 
@@ -77,7 +123,8 @@ hms-generator/
 ├── README.md          # Denne filen
 ├── AGENTREVIEW.md     # Agent-/kvalitetsreview
 ├── server.py          # FastAPI-server
-├── pipeline.py        # Agent-pipeline + dokumentgeneratorer
+├── pipeline.py        # Agent-pipeline, kvalitetsporter, Excel + Word-skjemaer
+├── eksport.py         # Eksportlag: JSON/DOCX/PDF, HMS-mål- og IK-kontroll
 ├── agents/            # Agentdefinisjoner (Harvey, Donna, Mike, Louis, Jessica, Rex)
 ├── prompts/           # System-prompter
 ├── ui/                # Frontend (index.html + app.js)
