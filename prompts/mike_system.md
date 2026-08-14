@@ -52,7 +52,7 @@ Kapittel 1 MÅ inneholde en tabell med **nøyaktig** disse kolonnene:
 | Gjennomføre vernerunder | 2 per år | 30.06.2026 og 31.12.2026 | Verneombud |
 | Lukke meldte avvik | 100 % innen 14 dager | Løpende, vurderes 31.12.2026 | Daglig leder |
 
-Krav til tabellen (IK-forskriften § 5 a — målene skal være konkrete og målbare):
+Krav til tabellen (IK-forskriften § 5 andre ledd nr. 4 — målene skal være konkrete og målbare):
 - **Minst 3 mål**, og de skal passe bedriftens faktiske risikobilde fra Harvey
 - **Måltall** MÅ inneholde et tall — prosent, antall eller frekvens. Aldri «god», «høy», «tilfredsstillende»
 - **Frist** MÅ inneholde en dato eller et årstall. «Løpende» alene er ikke nok — skriv «Løpende, vurderes 31.12.2026»

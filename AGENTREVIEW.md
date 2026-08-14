@@ -76,7 +76,8 @@ Kode    → regenererer kun kapitler med funn (maks 2 iterasjoner) → lever
 4. Hjemmelskontroll: alle §-referanser i dokumentet finnes i Harveys lovliste eller en vedlikeholdt whitelist — fanger hallusinerte paragrafer
 5. Minimumslengde per kapittel (f.eks. 150 ord) og totaldokument
 6. Begge dokumenter til stede hvis personalhåndbok er bestilt
-7. IK-forskriften § 5 a–e: nøkkelord-sjekk for at alle fem punkter er dekket
+7. IK-forskriften § 5 andre ledd nr. 4–8: hvert dokumentasjonskrav må ha et eget kapittel
+   (henvisningsformen «§ 5 a–e» var feil — forskriften bruker nummererte punkter)
 
 **Parametre:** `temperature=0.2` for alle agenter (compliance-dokumenter skal være deterministiske), `max_tokens` per agent (Harvey 4k, Donna 8k, Mike 4–8k *per kapittel*, Jessica 8k for QA-funn).
 

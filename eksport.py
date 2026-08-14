@@ -143,7 +143,7 @@ def finn_hms_maal(md: str) -> list[dict]:
 
 def hms_maal_feil(md: str, minimum: int = 3) -> list[str]:
     """
-    Kvalitetsport for IK-forskriften § 5 a: målene skal være konkrete og målbare.
+    Kvalitetsport for IK-forskriften § 5 andre ledd nr. 4: målene skal være konkrete og målbare.
     Krever tabell med minst `minimum` mål der måltall og frist inneholder tall.
     """
     maal = finn_hms_maal(md)

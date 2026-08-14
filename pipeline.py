@@ -810,7 +810,9 @@ _KJENTE_PARAGRAFER = {
     "§ 2-1", "§ 2-3", "§ 2A-1", "§ 2A-2", "§ 2A-4", "§ 2A-6",
     "§ 3-1", "§ 3-2", "§ 3-3", "§ 3-4", "§ 3-5",
     "§ 4-1", "§ 4-2", "§ 4-3", "§ 4-4", "§ 4-5", "§ 4-6",
-    "§ 5", "§ 5 a", "§ 5 b", "§ 5 c", "§ 5 d", "§ 5 e", "§ 5-1", "§ 5-2",
+    # IK-forskriften § 5 andre ledd har NUMMERERTE punkter 1–8 — ikke bokstaver.
+    # «§ 5 a»–«§ 5 e» er derfor bevisst utelatt, slik at hjemmelskontrollen flagger dem.
+    "§ 5", "§ 5-1", "§ 5-2",
     "§ 6-1", "§ 6-2", "§ 6-5", "§ 7", "§ 7-1", "§ 7-2",
     "§ 8-19", "§ 8-24", "§ 9-6", "§ 10",
     "§ 10-4", "§ 10-6", "§ 10-8", "§ 10-9", "§ 10-11",
@@ -843,7 +845,7 @@ def _hjemmel_avvik(doc: str, harvey_data: dict) -> list[str]:
 
 
 def _er_hms_maal_kapittel(kap: dict, dok_navn: str) -> bool:
-    """Kapittel 1 i HMS-håndboken skal inneholde de målbare HMS-målene (IK-forskriften § 5 a)."""
+    """Kapittel 1 i HMS-håndboken skal ha de målbare HMS-målene (IK-forskriften § 5 andre ledd nr. 4)."""
     return dok_navn == "HMS-håndboken" and kap.get("nummer") == 1
 
 

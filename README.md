@@ -61,7 +61,8 @@ det leveres aldri ufullstendige eller avkuttede dokumenter.
 
 - **Arbeidsmiljøloven** (AML, 2005) — inkl. verneombud fra 5 ansatte (§ 6-1),
   AMU fra 30 (§ 7-1), varsling kap. 2A, arbeidsavtalekrav fra 1.7.2024 (§ 14-6)
-- **Internkontrollforskriften** (IK-forskriften, 1996) — § 5 a–e
+- **Internkontrollforskriften** (IK-forskriften, 1996) — § 5 andre ledd nr. 1–8,
+  der nr. 4–8 er de kravene som skal dokumenteres skriftlig
 - **Ferieloven**, **OTP-loven** (fra første krone, 2022), **Folketrygdloven** kap. 8–9
 - Arbeidstilsynets bransjeveiledninger via NACE-tabellen i Supabase
 

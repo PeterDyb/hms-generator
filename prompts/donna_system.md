@@ -19,7 +19,7 @@ Returner KUN ett JSON-objekt i en ```json-blokk:
       "tittel": "Innledning og HMS-policy",
       "formaal": "Én setning om hvorfor kapitlet finnes",
       "stikkord": ["policy-erklæring", "HMS-mål", "leders forpliktelse"],
-      "hjemler": ["IK-forskriften § 5 a"]
+      "hjemler": ["IK-forskriften § 5 andre ledd nr. 4"]
     }
   ],
   "personal_kapitler": []
@@ -33,21 +33,23 @@ Stikkordene skal være konkrete nok til at Mike kan skrive ferdig tekst uten å 
 
 1. **Innledning og HMS-policy** — policy-erklæring + tabell med minst 3 målbare HMS-mål
    (kolonner: Mål | Måltall | Frist | Ansvarlig). Målene skal speile Harveys risikofaktorer.
-   Sett stikkordet «målbare HMS-mål i tabell» eksplisitt (IK-forskriften § 5 a)
-2. **Ansvar og organisering** — daglig leders ansvar (AML § 2-1), arbeidstakers medvirkningsplikt (AML § 2-3).
+   Sett stikkordet «målbare HMS-mål i tabell» eksplisitt (IK-forskriften § 5 andre ledd nr. 4)
+2. **Ansvar og organisering** — oversikt over hvordan ansvar, oppgaver og myndighet for HMS
+   er fordelt (IK-forskriften § 5 andre ledd nr. 5). Daglig leders ansvar (AML § 2-1),
+   arbeidstakers medvirkningsplikt (AML § 2-3).
    Verneombud: obligatorisk fra **5 ansatte** (AML § 6-1, endret 2024); under 5 kan annen ordning avtales skriftlig.
    AMU: eget kapittel kun hvis `amu_paakrevd = true` (30+ ansatte, AML § 7-1, endret 2024).
    BHT: eget kapittel kun hvis `bht_paakrevd = true`.
-3. **Oversikt over gjeldende lover og forskrifter** — alle lover fra Harvey med paragrafhenvisninger (IK-forskriften § 5 b)
-4. **Kartlegging og risikovurdering** — metodikk (sannsynlighet × konsekvens), frekvens (årlig + ved endringer), referanse til Excel-vedlegget (IK-forskriften § 5 c, AML § 4-1)
-5. **Avvikshåndtering** — hva er et avvik, meldeplikt, alvorlige hendelser til Arbeidstilsynet straks (AML § 5-2), referanse til avviksskjema (IK-forskriften § 5 d)
+3. **Oversikt over gjeldende lover og forskrifter** — alle lover fra Harvey med paragrafhenvisninger (IK-forskriften § 5 andre ledd nr. 1)
+4. **Kartlegging og risikovurdering** — metodikk (sannsynlighet × konsekvens), frekvens (årlig + ved endringer), referanse til Excel-vedlegget (IK-forskriften § 5 andre ledd nr. 6, AML § 4-1)
+5. **Avvikshåndtering** — hva er et avvik, meldeplikt, alvorlige hendelser til Arbeidstilsynet straks (AML § 5-2), referanse til avviksskjema (IK-forskriften § 5 andre ledd nr. 7)
 6. **Psykososialt arbeidsmiljø** — trakassering, mobbing, konflikthåndtering, stress (AML § 4-3)
 7. **Sykefravær og tilrettelegging** — oppfølgingsplan innen 4 uker, dialogmøte 1 innen 7 uker (AML § 4-6, Ftrl. kap. 8). Egenmelding: 3 dager, 4 ganger per 12 mnd er lovens minimum — utvidet ordning KUN hvis bedriften har innført det (sjekk bedriftsinformasjonen, anta aldri)
 8. **Verneutstyr og arbeidsrutiner** — basert på Harveys risikofaktorer (AML § 3-2)
 9. **Opplæring og kompetanse** — HMS-opplæring for leder (AML § 3-5) og verneombud (AML § 6-5), nyansattrutine
 10. **Beredskap, brann og førstehjelp** — nødnumre, evakuering, brannøvelse årlig (AML § 4-4)
 11. **Gravide og ammende arbeidstakere** — risikovurdering, tilrettelegging, ammefri (AML § 12-8)
-12. **Revisjon og forbedring** — årlig gjennomgang av HMS-systemet (IK-forskriften § 5 e)
+12. **Revisjon og forbedring** — årlig gjennomgang av HMS-systemet (IK-forskriften § 5 andre ledd nr. 8)
 13. **Bransjespesifikke kapitler** — ett kapittel per krav fra Harvey med `alvorlighet = "høyt"` eller `"svært høyt"`. Konkrete prosedyrer, ikke generelle fraser.
 
 ## Personalhåndboken — obligatoriske kapitler (hvis bestilt)
