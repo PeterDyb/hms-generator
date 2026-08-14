@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HMS-generator — HMS-dokumentasjonen ferdig, ikke enda en mal</title>
+<meta name="description" content="Komplett HMS-håndbok, personalhåndbok, risikovurdering og ni vedlegg, tilpasset bransjen din. Kontrollert mot internkontrollforskriften før du får den." />
+
+<!--
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  FØR DU SENDER DENNE SIDEN TIL NOEN — bytt ut disse fire tingene:    ║
+  ║                                                                      ║
+  ║  1. PRIS   — søk på «4 900» (3 treff). Tallet er et FORSLAG fra      ║
+  ║              Claude, ikke en pris du har bestemt. Sett din egen.     ║
+  ║  2. KJØP   — søk på «BYTT-MEG-BETALINGSLENKE» (2 treff).            ║
+  ║              Lim inn Stripe Payment Link eller Vipps-lenke.          ║
+  ║  3. E-POST — søk på «post@example.no» (2 treff).                    ║
+  ║  4. TID    — søk på «BYTT-MEG-TID» (1 treff). Mål én ekte kjøring   ║
+  ║              og skriv inn faktisk tid.                               ║
+  ╚══════════════════════════════════════════════════════════════════════╝
+-->
+
+<style>
+  /* ─── Tokens ──────────────────────────────────────────────────────────
+     Aksenten er blåfargen på norske påbudsskilt — de runde, blå «påbudt»-
+     skiltene. Produktet handler om det påbudte, så fargen er hentet der.
+     Bestått/stoppet er semantiske og holdes adskilt fra aksenten.        */
+  :root {
+    --paper:      #F4F7F9;
+    --surface:    #FFFFFF;
+    --surface-2:  #EAEFF3;
+    --ink:        #12171C;
+    --ink-soft:   #4A5560;
+    --ink-faint:  #78848F;
+    --rule:       #D3DCE3;
+    --rule-soft:  #E4EAEF;
+    --accent:     #0B5FA5;
+    --accent-ink: #084A81;
+    --accent-wash:#E4EFF8;
+    --pass:       #2C6A4C;
+    --pass-wash:  #E2EFE8;
+    --stop:       #9E2E20;
+    --stop-wash:  #F7E5E2;
+
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans:  system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono:  ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+    --measure: 62ch;
+    --shadow: 0 1px 2px rgba(18,23,28,.05), 0 8px 24px -12px rgba(18,23,28,.18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:      #0E1317;
+      --surface:    #161C22;
+      --surface-2:  #1E262E;
+      --ink:        #E7EDF2;
+      --ink-soft:   #A8B4BF;
+      --ink-faint:  #7D8A95;
+      --rule:       #2B353E;
+      --rule-soft:  #222B33;
+      --accent:     #4F9FE0;
+      --accent-ink: #7FBCF0;
+      --accent-wash:#152836;
+      --pass:       #6FBE96;
+      --pass-wash:  #14251D;
+      --stop:       #E08A7C;
+      --stop-wash:  #2A1815;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #0E1317;
+    --surface:    #161C22;
+    --surface-2:  #1E262E;
+    --ink:        #E7EDF2;
+    --ink-soft:   #A8B4BF;
+    --ink-faint:  #7D8A95;
+    --rule:       #2B353E;
+    --rule-soft:  #222B33;
+    --accent:     #4F9FE0;
+    --accent-ink: #7FBCF0;
+    --accent-wash:#152836;
+    --pass:       #6FBE96;
+    --pass-wash:  #14251D;
+    --stop:       #E08A7C;
+    --stop-wash:  #2A1815;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
+  }
+
+  :root[data-theme="light"] {
+    --paper:      #F4F7F9;
+    --surface:    #FFFFFF;
+    --surface-2:  #EAEFF3;
+    --ink:        #12171C;
+    --ink-soft:   #4A5560;
+    --ink-faint:  #78848F;
+    --rule:       #D3DCE3;
+    --rule-soft:  #E4EAEF;
+    --accent:     #0B5FA5;
+    --accent-ink: #084A81;
+    --accent-wash:#E4EFF8;
+    --pass:       #2C6A4C;
+    --pass-wash:  #E2EFE8;
+    --stop:       #9E2E20;
+    --stop-wash:  #F7E5E2;
+    --shadow: 0 1px 2px rgba(18,23,28,.05), 0 8px 24px -12px rgba(18,23,28,.18);
+  }
+
+  /* ─── Grunnlag ────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.15; margin: 0; }
+  p { margin: 0; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  .wrap { width: 100%; max-width: 1080px; margin-inline: auto; padding-inline: 24px; }
+  .col  { max-width: var(--measure); }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  .lede { font-size: 19px; color: var(--ink-soft); }
+
+  /* Alle seksjoner deler denne — ingen konkurrerende margin-regler. */
+  .band { padding-block: 76px; border-top: 1px solid var(--rule-soft); }
+  .band > .wrap { display: flex; flex-direction: column; gap: 32px; }
+  .band-alt { background: var(--surface); }
+
+  /* ─── Topplinje ───────────────────────────────────────────────────── */
+  .topbar {
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .topbar > .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 14px;
+  }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand-mark {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: grid; place-items: center;
+    font-family: var(--serif);
+    font-size: 16px;
+    flex: none;
+  }
+  .brand-name { font-family: var(--serif); font-size: 17px; font-weight: 600; }
+  .topbar-links { display: flex; align-items: center; gap: 22px; font-size: 14px; }
+  .topbar-links a { color: var(--ink-soft); text-decoration: none; }
+  .topbar-links a:hover { color: var(--accent); }
+
+  /* ─── Hero ────────────────────────────────────────────────────────── */
+  .hero { padding-block: 88px 76px; background: var(--surface); border-bottom: 1px solid var(--rule-soft); }
+  .hero > .wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+    gap: 64px;
+    align-items: start;
+  }
+  .hero-copy { display: flex; flex-direction: column; gap: 22px; }
+  .hero h1 { font-size: clamp(34px, 4.6vw, 50px); letter-spacing: -.015em; }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+
+  .cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 13px 24px;
+    border-radius: 3px;
+    font-size: 15px; font-weight: 600;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: background-color .15s ease, border-color .15s ease;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-ink); }
+  .btn-ghost { border-color: var(--rule); color: var(--ink); background: var(--surface); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .price-note { font-size: 14px; color: var(--ink-faint); }
+  .price-note strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* ─── Kvalitetsrapport-kortet ─────────────────────────────────────────
+     Speiler det kvalitetsportene faktisk gjør: enten består alt, eller så
+     stoppes leveransen. Kortet er statisk — ingen påstander om sanntid.  */
+  .report {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    font-size: 14px;
+  }
+  .report-head {
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface-2);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .report-title { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+  .report-list { list-style: none; margin: 0; padding: 6px 0; }
+  .report-list li {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: baseline;
+    gap: 11px;
+    padding: 9px 18px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .report-list li:last-child { border-bottom: 0; }
+  .tick { color: var(--pass); font-size: 15px; line-height: 1.4; }
+  .tick-stop { color: var(--stop); }
+  .report-label { color: var(--ink); line-height: 1.45; }
+  .report-ref { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); white-space: nowrap; }
+  .report-foot {
+    padding: 12px 18px;
+    background: var(--stop-wash);
+    border-top: 1px solid var(--rule);
+    color: var(--stop);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .report-foot strong { font-weight: 700; }
+
+  .pill {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 2px;
+  }
+  .pill-stop { background: var(--stop-wash); color: var(--stop); }
+
+  /* ─── Kvalitetsportene (nr. 4–8) ──────────────────────────────────── */
+  .gates { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--rule); }
+  .gate {
+    display: grid;
+    grid-template-columns: 68px minmax(0, 1fr);
+    gap: 26px;
+    padding-block: 26px;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+  }
+  .gate-nr {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    padding-top: 4px;
+    white-space: nowrap;
+  }
+  .gate-body { display: flex; flex-direction: column; gap: 7px; }
+  .gate h3 { font-size: 19px; }
+  .gate p { color: var(--ink-soft); font-size: 16px; }
+  .gate-check {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--pass);
+    background: var(--pass-wash);
+    border-left: 2px solid var(--pass);
+    padding: 8px 12px;
+    line-height: 1.55;
+    margin-top: 3px;
+  }
+
+  /* ─── Leveransetabell ─────────────────────────────────────────────── */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 15px; }
+  thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 500;
+    padding: 13px 18px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  tbody td { padding: 13px 18px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; line-height: 1.5; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.fmt { font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; }
+  td.law { font-size: 13.5px; color: var(--ink-faint); }
+  .doc-name { font-weight: 600; }
+
+  /* ─── Lovgrunnlag ─────────────────────────────────────────────────── */
+  .laws { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+  .law-cell { background: var(--surface); padding: 20px; display: flex; flex-direction: column; gap: 6px; }
+  .law-cell h3 { font-size: 16px; }
+  .law-cell p { font-size: 14px; color: var(--ink-soft); }
+  .law-ref { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+
+  /* ─── Pris ────────────────────────────────────────────────────────── */
+  .pricebox {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 560px;
+  }
+  .price-figure { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .price-figure .kr { font-family: var(--serif); font-size: 46px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .price-figure .unit { color: var(--ink-faint); font-size: 15px; }
+  .price-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; font-size: 15px; }
+  .price-list li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: baseline; color: var(--ink-soft); }
+  .price-list .tick { font-size: 14px; }
+
+  /* ─── FAQ ─────────────────────────────────────────────────────────── */
+  .faq { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--rule); max-width: 760px; }
+  .faq details { border-bottom: 1px solid var(--rule); }
+  .faq summary {
+    cursor: pointer;
+    padding: 19px 0;
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    list-style: none;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 20px;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; font-family: var(--mono); color: var(--accent); font-size: 18px; flex: none; }
+  .faq details[open] summary::after { content: "–"; }
+  .faq details > p { padding: 0 0 20px; color: var(--ink-soft); max-width: var(--measure); font-size: 16px; }
+  .faq details > p + p { margin-top: -6px; }
+
+  /* ─── Ansvar + bunn ───────────────────────────────────────────────── */
+  .disclaimer {
+    border-left: 2px solid var(--accent);
+    background: var(--accent-wash);
+    padding: 20px 24px;
+    max-width: 760px;
+    display: flex; flex-direction: column; gap: 9px;
+  }
+  .disclaimer h3 { font-size: 16px; }
+  .disclaimer p { font-size: 15px; color: var(--ink-soft); }
+
+  footer { border-top: 1px solid var(--rule); background: var(--surface); padding-block: 34px; }
+  footer > .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; font-size: 13.5px; color: var(--ink-faint); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 860px) {
+    body { font-size: 16px; }
+    .hero > .wrap { grid-template-columns: 1fr; gap: 44px; }
+    .hero { padding-block: 56px 52px; }
+    .band { padding-block: 56px; }
+    .gate { grid-template-columns: 1fr; gap: 10px; }
+    .gate-nr { padding-top: 0; }
+    .pricebox { padding: 28px; }
+    .wrap { padding-inline: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">§</span>
+      <span class="brand-name">HMS-generator</span>
+    </div>
+    <nav class="topbar-links">
+      <a href="#hva-du-far">Hva du får</a>
+      <a href="#kontroll">Kvalitetskontroll</a>
+      <a href="#pris">Pris</a>
+      <a href="/app">Logg inn</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-copy">
+      <p class="eyebrow">For bedrifter med 5–50 ansatte</p>
+      <h1>HMS-dokumentasjonen ferdig. Ikke <em>enda en mal</em> du aldri blir ferdig med.</h1>
+      <p class="lede">
+        Komplett HMS-håndbok, personalhåndbok, risikovurdering og ni vedlegg —
+        tilpasset bransjen og størrelsen på bedriften din. Hvert dokument
+        kontrolleres mot internkontrollforskriften før du får det utlevert.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="BYTT-MEG-BETALINGSLENKE">Kjøp og kom i gang</a>
+        <a class="btn btn-ghost" href="#kontroll">Se hva som kontrolleres</a>
+      </div>
+      <p class="price-note">
+        Engangspris <strong>4 900 kr</strong> eks. mva. Ingen abonnement, ingen binding.
+      </p>
+    </div>
+
+    <div class="report" role="img"
+         aria-label="Eksempel på kvalitetsrapport der fire kontroller er bestått og én er stoppet, med resultat at leveransen avbrytes.">
+      <div class="report-head">
+        <span class="report-title">Kvalitetsport — HMS-håndbok</span>
+        <span class="pill pill-stop">Stoppet</span>
+      </div>
+      <ul class="report-list">
+        <li><span class="tick" aria-hidden="true">✓</span><span class="report-label">Alle kapitler til stede</span><span class="report-ref">13/13</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span class="report-label">Ingen plassholdere igjen</span><span class="report-ref">0 funn</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span class="report-label">Eget kapittel per dokumentasjonskrav</span><span class="report-ref">§ 5 nr. 4–8</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span class="report-label">Lovhenvisninger sporet til kilde</span><span class="report-ref">41 ref.</span></li>
+        <li><span class="tick tick-stop" aria-hidden="true">✕</span><span class="report-label">HMS-mål med tallfestet måltall og frist</span><span class="report-ref">2 av 3</span></li>
+      </ul>
+      <div class="report-foot">
+        <strong>Leveransen stoppet.</strong> Målet «redusere sykefravær» mangler
+        tallfestet måltall. Dokumentet sendes tilbake for omskriving før utlevering.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="col" style="display:flex; flex-direction:column; gap:20px;">
+      <p class="eyebrow">Problemet</p>
+      <h2 style="font-size:30px;">Maler vet ikke om du er ferdig</h2>
+      <p>
+        Du har sannsynligvis prøvd allerede. En mal lastet ned fra nettet, eller
+        et dokument arvet fra forrige regnskapsfører. Det ligger på fellesområdet,
+        og et sted midt inni står det fortsatt <code style="font-family:var(--mono); font-size:.9em; background:var(--stop-wash); color:var(--stop); padding:1px 5px; border-radius:2px;">[BEDRIFTSNAVN]</code>.
+        Tabellen med HMS-mål er tom. Den årlige gjennomgangen er aldri gjennomført,
+        fordi ingen visste at den var et krav.
+      </p>
+      <p>
+        Problemet med maler er ikke at de er dårlige. Det er at de er ferdige i det
+        øyeblikket du laster dem ned — mens jobben din så vidt har begynt. Ingen sier
+        fra hvis du stopper halvveis.
+      </p>
+      <p>
+        Alternativet er en HMS-konsulent til titusener av kroner og flere ukers
+        kalendertid. For en bedrift med tolv ansatte er det ofte grunnen til at
+        det aldri blir gjort i det hele tatt.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="band band-alt" id="hva-du-far">
+  <div class="wrap">
+    <div class="col" style="display:flex; flex-direction:column; gap:14px;">
+      <p class="eyebrow">Leveransen</p>
+      <h2 style="font-size:30px;">Elleve dokumenter, fire formater</h2>
+      <p class="lede" style="font-size:17px;">
+        Alt kommer ferdig utfylt med bedriftens navn, organisasjonsnummer og
+        bransje. Word-filene kan redigeres videre, PDF-ene kan skrives ut og
+        settes i perm, JSON-filene kan leses inn i andre systemer.
+      </p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Dokument</th>
+            <th scope="col">Formater</th>
+            <th scope="col">Hjemmel</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="doc-name">HMS-håndbok</span></td>
+            <td class="fmt">docx · pdf · md · json</td>
+            <td class="law">IK-forskriften § 5 andre ledd nr. 4–8</td>
+          </tr>
+          <tr>
+            <td><span class="doc-name">Personalhåndbok</span></td>
+            <td class="fmt">docx · pdf · md · json</td>
+            <td class="law">AML kap. 2A og 14, ferieloven, OTP-loven</td>
+          </tr>
+          <tr>
+            <td><span class="doc-name">Risikovurdering</span></td>
+            <td class="fmt">xlsx · docx · pdf · json</td>
+            <td class="law">IK-forskriften § 5 andre ledd nr. 6</td>
+          </tr>
+          <tr>
+            <td><span class="doc-name">Årlig gjennomgang av HMS-systemet</span></td>
+            <td class="fmt">docx · pdf</td>
+            <td class="law">IK-forskriften § 5 andre ledd nr. 8</td>
+          </tr>
+          <tr>
+            <td><span class="doc-name">Avviksmelding</span></td>
+            <td class="fmt">docx</td>
+            <td class="law">IK-forskriften § 5 andre ledd nr. 7</td>
+          </tr>
+          <tr>
+            <td><span class="doc-name">Sjekkliste for vernerunde</span></td>
+            <td class="fmt">docx</td>
+            <td class="law">AML § 3-1</td>
+          </tr>
+          <tr>
+            <td><span class="doc-name">Handlingsplan HMS</span></td>
+            <td class="fmt">docx</td>
+            <td class="law">IK-forskriften § 5 andre ledd nr. 6</td>
+          </tr>
+          <tr>
+            <td><span class="doc-name">Oppfølgingsplan ved sykefravær</span></td>
+            <td class="fmt">docx</td>
+            <td class="law">AML § 3-4 og § 4-6</td>
+          </tr>
+          <tr>
+            <td><span class="doc-name">Arbeidsavtale (mal)</span></td>
+            <td class="fmt">docx</td>
+            <td class="law">AML § 14-5 og § 14-6</td>
+          </tr>
+          <tr>
+            <td><span class="doc-name">Egenmeldingsskjema</span></td>
+            <td class="fmt">docx</td>
+            <td class="law">Folketrygdloven § 8-24</td>
+          </tr>
+          <tr>
+            <td><span class="doc-name">Taushetserklæring</span></td>
+            <td class="fmt">docx</td>
+            <td class="law">GDPR art. 5 og art. 32</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="col" style="color:var(--ink-soft); font-size:15px;">
+      Skjemaene er ikke løse filer du må holde orden på selv. Håndboken får et
+      eget vedleggskapittel som viser hvert skjema med bruksområde, filnavn og
+      hjemmel — slik at dokumentasjonen henger sammen når noen spør etter den.
+    </p>
+  </div>
+</section>
+
+<section class="band" id="kontroll">
+  <div class="wrap">
+    <div class="col" style="display:flex; flex-direction:column; gap:20px;">
+      <p class="eyebrow">Kvalitetskontrollen</p>
+      <h2 style="font-size:30px;">Fem krav, kontrollert i kode</h2>
+      <p>
+        Internkontrollforskriften § 5 andre ledd lister åtte punkter. Nummer
+        <strong>4 til 8</strong> er de som skal kunne dokumenteres skriftlig — det er
+        dem Arbeidstilsynet ber om å få se. Vi sjekker hvert punkt for seg, maskinelt,
+        før dokumentet forlater systemet.
+      </p>
+      <p>
+        Kontrollene er kode, ikke skjønn. De kan ikke overtales, og de kan ikke ha
+        en dårlig dag. Består ikke dokumentet, blir det ikke levert — det skrives om.
+      </p>
+    </div>
+
+    <div class="gates">
+      <article class="gate">
+        <div class="gate-nr">§ 5 · nr. 4</div>
+        <div class="gate-body">
+          <h3>Mål for helse, miljø og sikkerhet</h3>
+          <p>«Vi skal ha et godt arbeidsmiljø» er ikke et mål. Et mål har et tall, en dato og et navn.</p>
+          <p class="gate-check">Krever minst tre mål i tabell. Måltall og frist må inneholde siffer, og ansvarlig må være navngitt — ellers stoppes leveransen.</p>
+        </div>
+      </article>
+
+      <article class="gate">
+        <div class="gate-nr">§ 5 · nr. 5</div>
+        <div class="gate-body">
+          <h3>Ansvar, oppgaver og myndighet</h3>
+          <p>Hvem gjør hva. Verneombud er påbudt fra fem ansatte, arbeidsmiljøutvalg fra tretti.</p>
+          <p class="gate-check">Krever eget kapittel om ansvar og organisering, der både daglig leder og verneombud er omtalt.</p>
+        </div>
+      </article>
+
+      <article class="gate">
+        <div class="gate-nr">§ 5 · nr. 6</div>
+        <div class="gate-body">
+          <h3>Kartlegging av farer, risiko og tiltak</h3>
+          <p>Risikoene skal være bedriftens egne — ikke en generisk liste som passer alle.</p>
+          <p class="gate-check">Krever eget kapittel som dekker både risiko og tiltak, med tilhørende risikovurdering i regneark.</p>
+        </div>
+      </article>
+
+      <article class="gate">
+        <div class="gate-nr">§ 5 · nr. 7</div>
+        <div class="gate-body">
+          <h3>Rutiner for avvik</h3>
+          <p>Hva ansatte gjør når noe går galt, og hvordan det rettes opp og forebygges.</p>
+          <p class="gate-check">Krever eget avvikskapittel som beskriver både melding og retting — ikke bare at avvik «skal meldes».</p>
+        </div>
+      </article>
+
+      <article class="gate">
+        <div class="gate-nr">§ 5 · nr. 8</div>
+        <div class="gate-body">
+          <h3>Årlig gjennomgang av systemet</h3>
+          <p>Punktet flest bedrifter stryker på. Systemet skal gjennomgås minst én gang i året — og gjennomgangen skal kunne dokumenteres.</p>
+          <p class="gate-check">Krever eget kapittel om årlig gjennomgang, og du får et ferdig utfyllingsskjema for selve gjennomgangen.</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="col" style="display:flex; flex-direction:column; gap:14px;">
+      <h3 style="font-size:19px;">To kontroller til, utenom forskriften</h3>
+      <p style="color:var(--ink-soft);">
+        <strong style="color:var(--ink);">Ingen gjenglemte plassholdere.</strong>
+        Finnes det en <code style="font-family:var(--mono); font-size:.9em;">[SETT INN NOE]</code> igjen
+        noe sted i dokumentet, stoppes leveransen. Dette er den vanligste grunnen
+        til at maler ender halvferdige.
+      </p>
+      <p style="color:var(--ink-soft);">
+        <strong style="color:var(--ink);">Lovhenvisninger spores til kilde.</strong>
+        Hver paragrafhenvisning i teksten sammenlignes med lovkartleggingen som ble
+        gjort for din bedrift. Henvisninger som ikke lar seg spore, flagges og
+        kontrolleres særskilt før godkjenning.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="band band-alt">
+  <div class="wrap">
+    <div class="col" style="display:flex; flex-direction:column; gap:16px;">
+      <p class="eyebrow">Bransjetilpasning</p>
+      <h2 style="font-size:30px;">En frisørsalong og et byggefirma har ikke samme risiko</h2>
+      <p>
+        Du velger NACE-koden din, og lovkartleggingen tar utgangspunkt i den:
+        bransjens egne krav, typiske farer og Arbeidstilsynets veiledning for
+        området. Deretter justeres alt etter antall ansatte og forhold du selv
+        oppgir — skiftarbeid, farlige stoffer, tungt arbeid, arbeid i høyden.
+      </p>
+      <p>
+        En bedrift med fire ansatte får ikke et kapittel om arbeidsmiljøutvalg
+        de ikke er pålagt å ha. En med trettifem får det.
+      </p>
+    </div>
+
+    <div class="laws">
+      <div class="law-cell">
+        <span class="law-ref">LOV-2005-06-17-62</span>
+        <h3>Arbeidsmiljøloven</h3>
+        <p>Verneombud fra 5 ansatte, arbeidsmiljøutvalg fra 30, varsling i kapittel 2A, og kravene til arbeidsavtale som gjelder fra 1. juli 2024.</p>
+      </div>
+      <div class="law-cell">
+        <span class="law-ref">FOR-1996-12-06-1127</span>
+        <h3>Internkontrollforskriften</h3>
+        <p>§ 5 andre ledd nr. 4–8 — de fem punktene som skal kunne dokumenteres skriftlig, og som utgjør ryggraden i håndboken.</p>
+      </div>
+      <div class="law-cell">
+        <span class="law-ref">Ferieloven · OTP · Ftrl.</span>
+        <h3>Øvrig regelverk</h3>
+        <p>Feriepenger med 12,5 % fra fylte 60, obligatorisk tjenestepensjon fra første krone, og sykepengereglene i folketrygdloven kapittel 8 og 9.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="pris">
+  <div class="wrap">
+    <div class="col" style="display:flex; flex-direction:column; gap:14px;">
+      <p class="eyebrow">Pris</p>
+      <h2 style="font-size:30px;">Én pris, én gang</h2>
+    </div>
+
+    <div class="pricebox">
+      <div class="price-figure">
+        <span class="kr">4 900 kr</span>
+        <span class="unit">eks. mva — engangsbeløp</span>
+      </div>
+      <ul class="price-list">
+        <li><span class="tick" aria-hidden="true">✓</span><span>Elleve dokumenter i inntil fire formater hver</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span>Tilpasset NACE-kode, antall ansatte og oppgitte risikoforhold</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span>Alle kvalitetskontroller bestått før utlevering</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span>Word-filer du eier og kan redigere fritt</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span>Ingen binding, ingen månedlig kostnad</span></li>
+      </ul>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="BYTT-MEG-BETALINGSLENKE">Kjøp og kom i gang</a>
+      </div>
+      <p class="price-note">
+        Til sammenligning ligger en HMS-konsulent for en bedrift på denne
+        størrelsen typisk mellom 15 000 og 40 000 kroner.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="band band-alt">
+  <div class="wrap">
+    <div class="col" style="display:flex; flex-direction:column; gap:8px;">
+      <p class="eyebrow">Spørsmål</p>
+      <h2 style="font-size:30px;">Det folk lurer på først</h2>
+    </div>
+
+    <div class="faq">
+      <details>
+        <summary>Er dette godkjent av Arbeidstilsynet?</summary>
+        <p>
+          Nei — og det er ingen andre HMS-systemer heller. Arbeidstilsynet
+          godkjenner ikke internkontrollsystemer i det hele tatt. De fører tilsyn
+          med at bedriften faktisk har et system som fungerer, og ber da om å se
+          dokumentasjonen. Er noen som påstår at produktet deres er
+          «Arbeidstilsynet-godkjent», stemmer det ikke.
+        </p>
+        <p>
+          Det du får her er dokumentasjonen, bygget etter kravene i
+          internkontrollforskriften § 5.
+        </p>
+      </details>
+
+      <details>
+        <summary>Vi har en HMS-perm fra før — trenger vi dette?</summary>
+        <p>
+          Kanskje ikke. Sjekk tre ting i permen dere har: Står det HMS-mål med
+          tallfestet måltall, frist og navngitt ansvarlig? Er den årlige
+          gjennomgangen av systemet gjennomført og dokumentert? Er
+          risikovurderingen oppdatert etter siste endring i bedriften?
+        </p>
+        <p>
+          Mangler ett av de tre, er permen ikke i mål — og det er som regel
+          nummer to som mangler.
+        </p>
+      </details>
+
+      <details>
+        <summary>Hvor lang tid tar det?</summary>
+        <p>
+          BYTT-MEG-TID. Du fyller ut ett skjema med opplysninger om bedriften,
+          og får dokumentene ferdige til nedlasting i samme økt.
+        </p>
+      </details>
+
+      <details>
+        <summary>Kan jeg redigere dokumentene etterpå?</summary>
+        <p>
+          Ja. Alt leveres som Word-filer i tillegg til PDF, og du eier dem.
+          Det er også meningen at du skal redigere dem — HMS-systemet er
+          bedriftens eget, og skal tilpasses etter hvert som ting endrer seg.
+        </p>
+      </details>
+
+      <details>
+        <summary>Hva skjer når regelverket endres?</summary>
+        <p>
+          Dokumentene er riktige etter regelverket slik det gjelder på
+          kjøpstidspunktet. Ved et engangskjøp følger det ikke med automatisk
+          oppdatering senere — endres loven vesentlig, må dokumentene oppdateres,
+          enten av dere selv i Word-filene eller ved en ny generering.
+        </p>
+      </details>
+
+      <details>
+        <summary>Hva skjer med opplysningene om bedriften?</summary>
+        <p>
+          Opplysningene du fyller inn brukes til å generere dokumentene og lagres
+          i sesjonen din. Det etterspørres ingen personopplysninger om ansatte —
+          bare opplysninger om virksomheten.
+        </p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="disclaimer">
+      <h3>Dokumentene er utkast — og det er poenget</h3>
+      <p>
+        Det du får er et gjennomarbeidet utgangspunkt som skal gjennomgås, tilpasses
+        og vedtas av ledelsen før det tas i bruk. Det er ikke en forbeholdssetning
+        vi har lagt til for sikkerhets skyld: det er slik internkontroll er ment å
+        virke. Et HMS-system ingen i bedriften har lest eller vedtatt, er ikke et
+        HMS-system — uansett hvem som skrev det.
+      </p>
+      <p>
+        Vi tar bort den delen av jobben som er å skrive alt fra bunnen og passe på
+        at ingenting mangler. Delen som er å bli enige om hvordan dere faktisk skal
+        jobbe, kan ingen ta fra dere.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>HMS-generator</span>
+    <span>Spørsmål? <a href="mailto:post@example.no">post@example.no</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

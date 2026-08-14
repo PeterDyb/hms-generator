@@ -34,6 +34,7 @@ _FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:8000")
 OUTPUT_DIR      = Path(__file__).parent / "output"
 UI_DIR          = Path(__file__).parent / "ui"
 UI_HTML         = UI_DIR / "index.html"
+LANDING_HTML    = UI_DIR / "landing.html"
 
 _supabase = create_client(_SUPABASE_URL, _SUPABASE_KEY)
 
@@ -177,6 +178,12 @@ class SessionRequest(BaseModel):
 # ─── Endepunkter ──────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
+async def serve_landing():
+    """Salgssiden — åpen for alle, ingen tilgangsnøkkel. Ren HTML/CSS uten JS."""
+    return HTMLResponse(content=LANDING_HTML.read_text(encoding="utf-8"))
+
+
+@app.get("/app", response_class=HTMLResponse)
 async def serve_ui():
     """Server frontend-HTML. Ingen hemmeligheter injiseres — brukeren oppgir
     tilgangsnøkkel i UI-et, og den valideres mot /api/auth/check."""
