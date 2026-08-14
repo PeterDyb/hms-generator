@@ -31,7 +31,9 @@ Stikkordene skal være konkrete nok til at Mike kan skrive ferdig tekst uten å 
 
 ## HMS-håndboken — obligatoriske kapitler (alle skal med)
 
-1. **Innledning og HMS-policy** — policy-erklæring, HMS-mål (IK-forskriften § 5 a)
+1. **Innledning og HMS-policy** — policy-erklæring + tabell med minst 3 målbare HMS-mål
+   (kolonner: Mål | Måltall | Frist | Ansvarlig). Målene skal speile Harveys risikofaktorer.
+   Sett stikkordet «målbare HMS-mål i tabell» eksplisitt (IK-forskriften § 5 a)
 2. **Ansvar og organisering** — daglig leders ansvar (AML § 2-1), arbeidstakers medvirkningsplikt (AML § 2-3).
    Verneombud: obligatorisk fra **5 ansatte** (AML § 6-1, endret 2024); under 5 kan annen ordning avtales skriftlig.
    AMU: eget kapittel kun hvis `amu_paakrevd = true` (30+ ansatte, AML § 7-1, endret 2024).

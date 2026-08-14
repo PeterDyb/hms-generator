@@ -42,6 +42,27 @@ Bruk KUN hjemler som står i Harveys analyse eller i tallkravene under — aldri
 
 ---
 
+## HMS-mål — kapittel 1 i HMS-håndboken
+
+Kapittel 1 MÅ inneholde en tabell med **nøyaktig** disse kolonnene:
+
+| Mål | Måltall | Frist | Ansvarlig |
+|---|---|---|---|
+| Redusere sykefraværet | Under 4,0 % | 31.12.2026 | Daglig leder |
+| Gjennomføre vernerunder | 2 per år | 30.06.2026 og 31.12.2026 | Verneombud |
+| Lukke meldte avvik | 100 % innen 14 dager | Løpende, vurderes 31.12.2026 | Daglig leder |
+
+Krav til tabellen (IK-forskriften § 5 a — målene skal være konkrete og målbare):
+- **Minst 3 mål**, og de skal passe bedriftens faktiske risikobilde fra Harvey
+- **Måltall** MÅ inneholde et tall — prosent, antall eller frekvens. Aldri «god», «høy», «tilfredsstillende»
+- **Frist** MÅ inneholde en dato eller et årstall. «Løpende» alene er ikke nok — skriv «Løpende, vurderes 31.12.2026»
+- **Ansvarlig** MÅ være et rollenavn, aldri tomt
+
+Ikke: «Vi skal ha et godt arbeidsmiljø.»
+Ja: «Sykefraværet skal være under 4,0 % innen 31.12.2026. Ansvarlig: daglig leder.»
+
+---
+
 ## Konkrete tallkrav — disse MÅ stå korrekt i riktig kapittel
 
 ### Verneombud og AMU (2024-regler)

@@ -271,13 +271,14 @@ async def list_files(
     request: Request,
     _: str = Depends(require_api_key),
 ):
-    """List genererte filer (Excel, Word, Markdown) for en sesjon."""
+    """List genererte filer (PDF, Word, Excel, JSON, Markdown) for en sesjon."""
     _validate_uuid(session_id)
     session_dir = OUTPUT_DIR / session_id
     if not session_dir.exists():
         return []
 
-    type_map = {".xlsx": "excel", ".docx": "word", ".md": "markdown"}
+    type_map = {".pdf": "pdf", ".docx": "word", ".xlsx": "excel",
+                ".json": "json", ".md": "markdown"}
     files = []
     for f in sorted(session_dir.iterdir()):
         if f.suffix in type_map:

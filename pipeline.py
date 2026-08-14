@@ -10,6 +10,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from supabase import create_client
 
+import eksport
+
 load_dotenv()
 
 # Backend bruker service_role-nøkkelen (kun server-side, aldri i frontend).
@@ -153,25 +155,8 @@ def generate_excel_risikovurdering(company_info: dict, harvey_output: str, sessi
         "svært høyt": PatternFill("solid", fgColor="FFC7CE"),
     }
 
-    # Bygg risikodataene fra Harvey
-    risks = []
-    if harvey_data:
-        for rf in harvey_data.get("risikofaktorer", []):
-            risks.append({
-                "prosess": rf.get("faktor", ""),
-                "risiko":  rf.get("faktor", ""),
-                "hvem":    "Ansatte",
-                "alvorlighet": rf.get("alvorlighet", "middels"),
-                "tiltak":  rf.get("tiltak", ""),
-            })
-        for krav in harvey_data.get("bransjespesifikke_krav", []):
-            risks.append({
-                "prosess": krav.get("krav", ""),
-                "risiko":  krav.get("krav", ""),
-                "hvem":    krav.get("gjelder_naar", krav.get("gjelder_når", "Ansatte")),
-                "alvorlighet": "middels",
-                "tiltak":  f"Iverksett iht. {krav.get('hjemmel', 'gjeldende regelverk')}",
-            })
+    # Bygg risikodataene fra Harvey (delt med JSON-, Word- og PDF-eksporten)
+    risks = eksport.risiko_rader(harvey_data)
 
     DATA_START = 5
     for idx, rf in enumerate(risks, 1):
@@ -857,7 +842,12 @@ def _hjemmel_avvik(doc: str, harvey_data: dict) -> list[str]:
     return sorted(avvik)
 
 
-def _kapittelfeil(tekst: str, kap: dict) -> list[str]:
+def _er_hms_maal_kapittel(kap: dict, dok_navn: str) -> bool:
+    """Kapittel 1 i HMS-håndboken skal inneholde de målbare HMS-målene (IK-forskriften § 5 a)."""
+    return dok_navn == "HMS-håndboken" and kap.get("nummer") == 1
+
+
+def _kapittelfeil(tekst: str, kap: dict, dok_navn: str = "") -> list[str]:
     """Kvalitetsport per kapittel — kjøres på alt Mike skriver."""
     feil = []
     overskrift = f"## {kap['nummer']}. {kap['tittel']}"
@@ -870,10 +860,12 @@ def _kapittelfeil(tekst: str, kap: dict) -> list[str]:
         tmp = tmp.replace(ok, "")
     for m in {m.group(0) for m in _PLACEHOLDER_RE.finditer(tmp)}:
         feil.append(f"Plassholder: «{m}»")
+    if _er_hms_maal_kapittel(kap, dok_navn):
+        feil.extend(eksport.hms_maal_feil(tekst))
     return feil
 
 
-def _kvalitetsfeil(doc: str, kapitler: list[dict]) -> list[str]:
+def _kvalitetsfeil(doc: str, kapitler: list[dict], dok_navn: str = "") -> list[str]:
     """Kvalitetsport for sammensatt dokument."""
     feil = []
     tmp = doc
@@ -885,6 +877,8 @@ def _kvalitetsfeil(doc: str, kapitler: list[dict]) -> list[str]:
         overskrift = f"## {kap['nummer']}. {kap['tittel']}"
         if overskrift not in doc:
             feil.append(f"Kapittel mangler i dokumentet: {overskrift}")
+    if dok_navn == "HMS-håndboken":
+        feil.extend(eksport.hms_maal_feil(doc))
     return feil
 
 
@@ -1053,17 +1047,31 @@ def _mock_donna(company_info: dict) -> str:
     return "```json\n" + json.dumps(plan, ensure_ascii=False, indent=2) + "\n```"
 
 
+def _mock_hms_maal_tabell() -> str:
+    aar = time.strftime("%Y")
+    return f"""**HMS-mål:**
+
+| Mål | Måltall | Frist | Ansvarlig |
+|---|---|---|---|
+| Redusere sykefraværet | Under 4,0 % | 31.12.{aar} | Daglig leder |
+| Gjennomføre vernerunder | 2 per år | 30.06.{aar} og 31.12.{aar} | Verneombud |
+| Lukke meldte avvik | 100 % innen 14 dager | Løpende, vurderes 31.12.{aar} | Daglig leder |
+
+"""
+
+
 def _mock_mike_kapittel(company_info: dict, kap: dict) -> str:
     navn = company_info.get("bedriftsnavn", "Bedriften")
     hjemler = ", ".join(kap.get("hjemler", [])) or "gjeldende regelverk"
     stikkord = ", ".join(kap.get("stikkord", [])) or "se kapittelplan"
+    maal = _mock_hms_maal_tabell() if kap.get("nummer") == 1 else ""
     return f"""## {kap['nummer']}. {kap['tittel']}
 
 **Formål:** {kap.get('formaal', 'Sikre et godt og trygt arbeidsmiljø')} i {navn}.
 
 **Hvem dette gjelder:** Alle ansatte i {navn}.
 
-**Hva vi gjør:**
+{maal}**Hva vi gjør:**
 
 - Vi arbeider systematisk med {kap['tittel'].lower()} som en del av internkontrollen
 - Rutinene gjennomgås årlig og ved endringer i drift eller bemanning
@@ -1181,7 +1189,7 @@ def _skriv_kapittel(run_id: str, system: str, harvey_data: dict, company_info: d
         else:
             output = _stream_real(run_id, "mike", system, user_msg, prev=prev_output)
             tekst = output[len(prev_output):]
-        problemer = _kapittelfeil(tekst, kap)
+        problemer = _kapittelfeil(tekst, kap, dok_navn)
         if not problemer:
             return tekst.strip(), output
         user_msg += "\n\nForrige forsøk hadde disse feilene — rett dem: " + "; ".join(problemer)
@@ -1271,11 +1279,12 @@ def run_louis(session_id: str, doc: str, dok_navn: str, harvey_data: dict, compa
 
 
 def _louis_runde(session_id: str, doc: str, kapitler: list[tuple[dict, str]], dok_navn: str,
-                 dok_tittel: str, harvey_data: dict, company_info: dict) -> str:
-    """Louis-QA med maks én reparasjonsrunde via Mike. Returnerer godkjent dokument."""
+                 dok_tittel: str, harvey_data: dict, company_info: dict
+                 ) -> tuple[str, list[tuple[dict, str]]]:
+    """Louis-QA med maks én reparasjonsrunde via Mike. Returnerer (dokument, kapitler)."""
     rapport = run_louis(session_id, doc, dok_navn, harvey_data, company_info)
     if rapport.get("godkjent"):
-        return doc
+        return doc, kapitler
 
     per_kapittel: dict[str, list[str]] = {}
     for funn in rapport.get("funn", []):
@@ -1307,7 +1316,7 @@ def _louis_runde(session_id: str, doc: str, kapitler: list[tuple[dict, str]], do
         raise
 
     doc = _sett_sammen(company_info, dok_tittel, nye)
-    problemer = _kvalitetsfeil(doc, [k for k, _ in nye])
+    problemer = _kvalitetsfeil(doc, [k for k, _ in nye], dok_navn)
     if problemer:
         raise PipelineError(f"{dok_navn} besto ikke kvalitetsporten etter reparasjon: " + "; ".join(problemer))
 
@@ -1315,7 +1324,7 @@ def _louis_runde(session_id: str, doc: str, kapitler: list[tuple[dict, str]], do
     if not rapport2.get("godkjent"):
         gjenstaaende = "; ".join(f.get("problem", "") for f in rapport2.get("funn", []))
         raise PipelineError(f"Louis godkjente ikke {dok_navn} etter reparasjonsrunden: {gjenstaaende}")
-    return doc
+    return doc, nye
 
 
 def run_jessica(session_id: str, harvey_data: dict, hms_doc: str, personal_doc: str,
@@ -1374,23 +1383,24 @@ def run(session_id: str) -> None:
 
         # 4. Deterministisk sammenstilling + kvalitetsport
         hms_doc = _sett_sammen(company_info, "HMS-HÅNDBOK", hms_kap)
-        problemer = _kvalitetsfeil(hms_doc, [k for k, _ in hms_kap])
+        problemer = _kvalitetsfeil(hms_doc, [k for k, _ in hms_kap], "HMS-håndboken")
         if problemer:
             raise PipelineError("HMS-håndboken besto ikke kvalitetsporten: " + "; ".join(problemer))
 
         personal_doc = ""
         if personal_kap:
             personal_doc = _sett_sammen(company_info, "PERSONALHÅNDBOK", personal_kap)
-            problemer = _kvalitetsfeil(personal_doc, [k for k, _ in personal_kap])
+            problemer = _kvalitetsfeil(personal_doc, [k for k, _ in personal_kap], "personalhåndboken")
             if problemer:
                 raise PipelineError("Personalhåndboken besto ikke kvalitetsporten: " + "; ".join(problemer))
 
         # 5. Louis-QA med maks én reparasjonsrunde per dokument
-        hms_doc = _louis_runde(session_id, hms_doc, hms_kap, "HMS-håndboken",
-                               "HMS-HÅNDBOK", harvey_data, company_info)
+        hms_doc, hms_kap = _louis_runde(session_id, hms_doc, hms_kap, "HMS-håndboken",
+                                        "HMS-HÅNDBOK", harvey_data, company_info)
         if personal_doc:
-            personal_doc = _louis_runde(session_id, personal_doc, personal_kap, "personalhåndboken",
-                                        "PERSONALHÅNDBOK", harvey_data, company_info)
+            personal_doc, personal_kap = _louis_runde(
+                session_id, personal_doc, personal_kap, "personalhåndboken",
+                "PERSONALHÅNDBOK", harvey_data, company_info)
 
         # 6. Jessicas endelige verifisering — feiler høyt hvis lovlisten ikke er dekket
         run_jessica(session_id, harvey_data, hms_doc, personal_doc, company_info)
@@ -1405,12 +1415,20 @@ def run(session_id: str) -> None:
         output_dir.mkdir(parents=True, exist_ok=True)
         date_str = time.strftime("%Y-%m-%d")
         safe_name = company_info.get("bedriftsnavn", "ukjent").replace(" ", "_")
-        (output_dir / f"{safe_name}_HMS_{date_str}.md").write_text(hms_doc, encoding="utf-8")
-        if personal_doc:
-            (output_dir / f"{safe_name}_Personal_{date_str}.md").write_text(personal_doc, encoding="utf-8")
 
-        # 8. Excel-risikovurdering og Word-skjemaer
+        hms_basis = f"{safe_name}_HMS_{date_str}"
+        (output_dir / f"{hms_basis}.md").write_text(hms_doc, encoding="utf-8")
+        eksport.skriv_handbok(hms_doc, company_info, "HMS-HÅNDBOK", "hms",
+                              hms_kap, harvey_data, output_dir, hms_basis)
+        if personal_doc:
+            personal_basis = f"{safe_name}_Personal_{date_str}"
+            (output_dir / f"{personal_basis}.md").write_text(personal_doc, encoding="utf-8")
+            eksport.skriv_handbok(personal_doc, company_info, "PERSONALHÅNDBOK", "personal",
+                                  personal_kap, harvey_data, output_dir, personal_basis)
+
+        # 8. Risikovurdering (xlsx + json/docx/pdf) og Word-skjemaer
         generate_excel_risikovurdering(company_info, json.dumps(harvey_data, ensure_ascii=False), session_id)
+        eksport.skriv_risikovurdering(company_info, harvey_data, output_dir, safe_name)
         generate_word_forms(company_info, session_id)
 
         _supabase.table("sessions").update({"status": "completed"}).eq("id", session_id).execute()
