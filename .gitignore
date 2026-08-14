@@ -5,4 +5,5 @@ __pycache__/
 venv/
 output/
 .DS_Store
+*.pdf
 .claude/
