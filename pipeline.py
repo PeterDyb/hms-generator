@@ -810,6 +810,9 @@ _KJENTE_PARAGRAFER = {
     "§ 2-1", "§ 2-3", "§ 2A-1", "§ 2A-2", "§ 2A-4", "§ 2A-6",
     "§ 3-1", "§ 3-2", "§ 3-3", "§ 3-4", "§ 3-5",
     "§ 4-1", "§ 4-2", "§ 4-3", "§ 4-4", "§ 4-5", "§ 4-6",
+    # IK-forskriften § 4 — plikten til å innføre OG utøve internkontroll. Brukes av
+    # innføringsplanen; uten den ville hjemmelskontrollen flagget hver kjøring.
+    "§ 4",
     # IK-forskriften § 5 andre ledd har NUMMERERTE punkter 1–8 — ikke bokstaver.
     # «§ 5 a»–«§ 5 e» er derfor bevisst utelatt, slik at hjemmelskontrollen flagger dem.
     "§ 5", "§ 5-1", "§ 5-2",
@@ -1237,7 +1240,12 @@ def _sett_sammen(company_info: dict, tittel: str, kapitler: list[tuple[dict, str
     dato = time.strftime("%d.%m.%Y")
     safe_navn = navn.replace(" ", "_")
     vedlegg = eksport.vedleggsoversikt_markdown(safe_navn, dok_type)
-    toc = "\n".join(f"{kap['nummer']}. {kap['tittel']}" for kap, _ in kapitler)
+    # Bare HMS-håndboken: hvordan systemet innføres og holdes i drift (IK-forskriften § 4)
+    innforing = eksport.innforingsplan_markdown(company_info, safe_navn) if dok_type == "hms" else ""
+    toc = ""
+    if innforing:
+        toc += "Slik tar dere håndboken i bruk\n\n"
+    toc += "\n".join(f"{kap['nummer']}. {kap['tittel']}" for kap, _ in kapitler)
     if vedlegg:
         toc += "\n\nVedlegg og skjemaer"
     deler = [
@@ -1247,6 +1255,8 @@ def _sett_sammen(company_info: dict, tittel: str, kapitler: list[tuple[dict, str
         f"*Dette dokumentet tilhører {navn} og skal gjennomgås og oppdateres minst én gang per år.*",
         f"## Innholdsfortegnelse\n\n{toc}",
     ]
+    if innforing:
+        deler.append(innforing)
     deler.extend(tekst for _, tekst in kapitler)
     if vedlegg:
         deler.append(vedlegg)
@@ -1446,6 +1456,7 @@ def run(session_id: str) -> None:
         generate_excel_risikovurdering(company_info, json.dumps(harvey_data, ensure_ascii=False), session_id)
         eksport.skriv_risikovurdering(company_info, harvey_data, output_dir, safe_name)
         eksport.skriv_arlig_revisjon(company_info, harvey_data, output_dir, safe_name)
+        eksport.skriv_innforingsplan(company_info, output_dir, safe_name)
         generate_word_forms(company_info, session_id)
 
         _supabase.table("sessions").update({"status": "completed"}).eq("id", session_id).execute()

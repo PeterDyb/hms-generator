@@ -254,6 +254,11 @@ def ik_dekning_feil(md: str) -> list[str]:
 # håndboken skal vise hvilke skjemaer som finnes, hva de brukes til og hvor.
 # «dok» sier hvilken håndbok vedlegget hører til.
 VEDLEGG = [
+    {"dok": "hms", "fil": "Innføringsplan_HMS", "formater": "docx, pdf",
+     "tittel": "Innføringsplan HMS",
+     "bruk": "Fylles ut når håndboken tas i bruk. Dokumenterer at systemet er vedtatt, "
+             "gjort kjent for de ansatte og satt i drift.",
+     "hjemmel": "IK-forskriften § 4"},
     {"dok": "hms", "fil": "Risikovurdering", "formater": "xlsx, docx, pdf",
      "tittel": "Risikovurdering",
      "bruk": "Kartlegging av farer med sannsynlighet, konsekvens og tiltak. Oppdateres årlig og ved endringer.",
@@ -316,6 +321,220 @@ def vedleggsoversikt_markdown(safe_navn: str, dok_type: str) -> str:
             f"| {v['tittel']} | {v['bruk']} | {safe_navn}_{v['fil']} ({v['formater']}) | {v['hjemmel']} |"
         )
     return "\n".join(linjer)
+
+
+# ─── Innføring og drift ──────────────────────────────────────────────────────
+
+# En håndbok som ligger urørt er ikke internkontroll. IK-forskriften § 4 krever at
+# internkontroll «innføres og utøves», i samarbeid med arbeidstakerne — altså at
+# bedriften jobber etter dokumentene, ikke bare eier dem. Derfor får HMS-håndboken
+# en seksjon om hvordan systemet tas i bruk og holdes i drift, og et eget skjema
+# der innføringen kan dokumenteres.
+#
+# VIKTIG for kvalitetsportene:
+#  - Overskriftene her må ALDRI inneholde ord fra IK_DOKUMENTASJONSKRAV["overskrift"].
+#    Gjør de det, blir seksjonen en kandidat i ik_dekning_feil, og siden denne teksten
+#    alltid genereres kan et krav få falsk bestått selv om Mike aldri skrev kapitlet.
+#    Underpunkter bruker «###», som _kapittelseksjoner hopper over.
+#  - Utfyllingsfelter skrives med understrek, aldri «[fyll inn ...]», «[dato]» eller
+#    «[navn]» — de mønstrene stopper leveransen i plassholderporten.
+
+
+def _ansatte(company_info: dict) -> int:
+    try:
+        return int(company_info.get("antall_ansatte") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def innforing_steg(company_info: dict) -> list[dict]:
+    """
+    Stegene bedriften må gjennom for at håndboken skal bli et system i drift.
+    Terskelstyrt: verneombud fra 5 ansatte (AML § 6-1), AMU fra 30 (AML § 7-1).
+    """
+    n = _ansatte(company_info)
+    steg = [
+        {"hva": "Ledelsen leser gjennom håndboken, gjør nødvendige tilpasninger og vedtar den. "
+                "Dato og signatur føres på forsiden.",
+         "hjemmel": "IK-forskriften § 4"},
+    ]
+    if n >= 5:
+        steg.append({"hva": "Velg verneombud blant de ansatte, og meld fra om hvem det er.",
+                     "hjemmel": "AML § 6-1"})
+    else:
+        steg.append({"hva": "Med færre enn fem ansatte kan dere avtale skriftlig en annen ordning "
+                            "enn verneombud. Avtalen arkiveres sammen med denne håndboken.",
+                     "hjemmel": "AML § 6-1"})
+    if n >= 30:
+        steg.append({"hva": "Opprett arbeidsmiljøutvalg med representanter fra både ledelse og ansatte.",
+                     "hjemmel": "AML § 7-1"})
+    steg.extend([
+        {"hva": "Gå gjennom håndboken med alle ansatte, og gi opplæring i rutinene som gjelder "
+                "arbeidet deres. Før opp hvem som deltok.",
+         "hjemmel": "AML § 3-2"},
+        {"hva": "Gå gjennom risikovurderingen sammen med verneombudet og rett den mot forholdene "
+                "hos dere. Den som følger med er et utgangspunkt, ikke en fasit.",
+         "hjemmel": "IK-forskriften § 5 andre ledd nr. 6"},
+        {"hva": "Se over HMS-målene. Hvert mål skal ha et tall dere kan måles på, en dato og en "
+                "navngitt ansvarlig.",
+         "hjemmel": "IK-forskriften § 5 andre ledd nr. 4"},
+        {"hva": "Gjør avviksrutinen kjent: alle ansatte skal vite hva et avvik er, hvor det meldes "
+                "og hvem som følger det opp.",
+         "hjemmel": "IK-forskriften § 5 andre ledd nr. 7"},
+        {"hva": "Gjennomfør første vernerunde med verneombudet, og bruk sjekklisten som følger med.",
+         "hjemmel": "AML § 3-1"},
+        {"hva": "Gjør håndboken og skjemaene tilgjengelige der de ansatte finner dem.",
+         "hjemmel": "IK-forskriften § 5"},
+        {"hva": "Sett datoen for den årlige gjennomgangen i kalenderen nå, mens dere husker det.",
+         "hjemmel": "IK-forskriften § 5 andre ledd nr. 8"},
+    ])
+    return steg
+
+
+AARSHJUL = [
+    {"naar": "Fortløpende",
+     "hva": "Avvik og uønskede hendelser meldes, behandles og lukkes.",
+     "hjemmel": "IK-forskriften § 5 andre ledd nr. 7"},
+    {"naar": "Ved endring",
+     "hva": "Ny risikovurdering når dere endrer drift, utstyr, lokaler eller bemanning.",
+     "hjemmel": "IK-forskriften § 5 andre ledd nr. 6"},
+    {"naar": "Innen 4 uker",
+     "hva": "Oppfølgingsplan utarbeides ved sykefravær, regnet fra første fraværsdag.",
+     "hjemmel": "AML § 4-6"},
+    {"naar": "Halvårlig",
+     "hva": "Vernerunde sammen med verneombudet. Funn føres i handlingsplanen.",
+     "hjemmel": "AML § 3-1"},
+    {"naar": "Årlig",
+     "hva": "Risikovurderingen og HMS-målene gjennomgås og oppdateres.",
+     "hjemmel": "IK-forskriften § 5 andre ledd nr. 4 og 6"},
+    {"naar": "Årlig",
+     "hva": "Hele internkontrollen gjennomgås, og gjennomgangen dokumenteres skriftlig.",
+     "hjemmel": "IK-forskriften § 5 andre ledd nr. 8"},
+    {"naar": "Årlig",
+     "hva": "Håndboken oppdateres, og ny versjon føres inn i endringsloggen.",
+     "hjemmel": "IK-forskriften § 5"},
+]
+
+
+def innforingsplan_markdown(company_info: dict, safe_navn: str) -> str:
+    """
+    Seksjon i HMS-håndboken om hvordan bedriften tar systemet i bruk og holder
+    det i drift. Overskriftene er bevisst fri for ord som ik_dekning_feil leter
+    etter — se merknaden over.
+    """
+    linjer = [
+        "## Slik tar dere håndboken i bruk",
+        "",
+        "Denne håndboken dekker ikke HMS-kravene i seg selv. Kravene dekkes når dere "
+        "jobber etter den og kan vise hvordan. Internkontrollforskriften § 4 sier at "
+        "internkontroll skal *innføres og utøves* — i samarbeid med de ansatte. "
+        "Et system ingen har vedtatt, lest eller brukt, er ikke et system.",
+        "",
+        "### Det som må gjøres først",
+        "",
+        f"Punktene under gjør håndboken til {company_info.get('bedriftsnavn', 'bedriftens')} eget "
+        "system. Skjemaet «Innføringsplan HMS» "
+        f"({safe_navn}_Innføringsplan_HMS) har samme liste med felt for dato og "
+        "ansvarlig, slik at dere kan dokumentere at det faktisk ble gjort.",
+        "",
+        "| # | Hva dere gjør | Hjemmel |",
+        "|---|---|---|",
+    ]
+    for i, s in enumerate(innforing_steg(company_info), start=1):
+        linjer.append(f"| {i} | {s['hva']} | {s['hjemmel']} |")
+
+    linjer += [
+        "",
+        "### Slik holder dere det i gang",
+        "",
+        "Internkontroll er systematisk arbeid, ikke et engangsprosjekt. Tabellen under "
+        "viser hva som skal skje gjennom året.",
+        "",
+        "| Når | Hva som skjer | Hjemmel |",
+        "|---|---|---|",
+    ]
+    for p in AARSHJUL:
+        linjer.append(f"| {p['naar']} | {p['hva']} | {p['hjemmel']} |")
+
+    linjer += [
+        "",
+        "### Hvis dere får tilsyn",
+        "",
+        "Arbeidstilsynet godkjenner ikke HMS-systemer — de kontrollerer at bedriften har "
+        "ett som virker. Da er det som regel dette de ber om å se: håndboken med dato og "
+        "signatur, risikovurderingen, behandlede avviksmeldinger, og dokumentasjonen på "
+        "den årlige gjennomgangen. De fire tingene viser til sammen at systemet er i bruk.",
+    ]
+    return "\n".join(linjer)
+
+
+def _innforingsplan_dokument_markdown(company_info: dict) -> str:
+    """Utfyllingsskjema for innføringen — beviset på at systemet ble satt i drift."""
+    navn = company_info.get("bedriftsnavn", "Bedriften")
+    linjer = [
+        "# INNFØRINGSPLAN HMS",
+        f"## {navn}",
+        f"**Hjemmel:** IK-forskriften § 4  |  **Startet:** ____________________",
+        "",
+        "Internkontroll skal innføres og utøves i samarbeid med de ansatte. Fyll ut "
+        "dette skjemaet etter hvert som punktene gjennomføres, og arkiver det sammen "
+        "med HMS-håndboken. Utfylt skjema er dokumentasjonen på at systemet er tatt i bruk.",
+        "",
+        "## 1. Innføring",
+        "",
+        "| # | Hva dere gjør | Hjemmel | Utført dato | Ansvarlig |",
+        "|---|---|---|---|---|",
+    ]
+    for i, s in enumerate(innforing_steg(company_info), start=1):
+        linjer.append(f"| {i} | {s['hva']} | {s['hjemmel']} |  |  |")
+
+    linjer += [
+        "",
+        "## 2. Hvem har fått opplæring",
+        "",
+        "| Navn | Rolle | Dato | Signatur |",
+        "|---|---|---|---|",
+    ]
+    linjer += ["|  |  |  |  |" for _ in range(8)]
+
+    linjer += [
+        "",
+        "## 3. Faste oppgaver gjennom året",
+        "",
+        "| Når | Hva som skjer | Ansvarlig | Neste frist |",
+        "|---|---|---|---|",
+    ]
+    for p in AARSHJUL:
+        linjer.append(f"| {p['naar']} | {p['hva']} |  |  |")
+
+    linjer += [
+        "",
+        "## 4. Bekreftelse",
+        "",
+        "Vi bekrefter at HMS-systemet er gjennomgått, vedtatt og gjort kjent for de ansatte.",
+        "",
+        "| Rolle | Navn | Dato | Signatur |",
+        "|---|---|---|---|",
+        "| Daglig leder |  |  |  |",
+        "| Verneombud |  |  |  |",
+    ]
+    return "\n".join(linjer)
+
+
+def skriv_innforingsplan(company_info: dict, output_dir: Path, safe_navn: str) -> list[Path]:
+    """Innføringsplanen som DOCX + PDF."""
+    navn = company_info.get("bedriftsnavn", "Bedriften")
+    md = _innforingsplan_dokument_markdown(company_info)
+    filer = []
+    for path in (
+        til_docx(md, output_dir / f"{safe_navn}_Innføringsplan_HMS.docx", navn,
+                 sideskift_per_kapittel=False),
+        til_pdf(md, output_dir / f"{safe_navn}_Innføringsplan_HMS.pdf", navn,
+                f"Innføringsplan HMS — {navn}", sideskift_per_kapittel=False),
+    ):
+        if path:
+            filer.append(path)
+    return filer
 
 
 # ─── Risikodata ──────────────────────────────────────────────────────────────

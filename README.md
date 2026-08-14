@@ -49,6 +49,7 @@ Alt havner i `output/<session_id>/`, prefikset med bedriftsnavn og dato.
 | Personalhåndbok | `md`, `json`, `docx`, `pdf` | AML kap. 2A, 14, ferieloven, OTP |
 | Risikovurdering | `xlsx`, `json`, `docx`, `pdf` | IK-forskriften § 5 andre ledd nr. 6 |
 | Årlig gjennomgang av HMS-systemet | `docx`, `pdf` | IK-forskriften § 5 andre ledd nr. 8 |
+| Innføringsplan HMS | `docx`, `pdf` | IK-forskriften § 4 |
 | 7 utfyllbare skjemaer | `docx` | AML § 3-1, § 3-4, § 14-5, ftrl. § 8-24, GDPR |
 
 **JSON-formatet** er maskinlesbart med dokumentmeta, kapitler og hjemler — laget
@@ -59,6 +60,23 @@ oppfølgingsplan sykefravær (HMS) — arbeidsavtale, egenmeldingsskjema,
 taushetserklæring (personal). Skjemaene er ikke løse filer på en disk: håndboken
 får et eget **vedleggskapittel** som viser hvert skjema med bruksområde, filnavn
 og hjemmel, slik at dokumentasjonen henger sammen ved tilsyn.
+
+## Innføring og drift
+
+Dokumentene alene dekker ikke kravene — IK-forskriften § 4 krever at internkontroll
+*innføres og utøves*, i samarbeid med de ansatte. HMS-håndboken får derfor en
+deterministisk seksjon «Slik tar dere håndboken i bruk» (`innforingsplan_markdown`)
+med innføringssteg og årshjul, og innføringsplanen følger med som eget
+utfyllingsskjema.
+
+Stegene er terskelstyrt: verneombud fra 5 ansatte, AMU fra 30. Under 5 ansatte
+beskrives skriftlig avtale om annen ordning i stedet.
+
+> **Merk for videre utvikling:** seksjonens `##`-overskrift må aldri inneholde ord
+> fra `IK_DOKUMENTASJONSKRAV[...]["overskrift"]`. Siden teksten alltid genereres,
+> ville en kollisjon gjort seksjonen til en kandidat i `ik_dekning_feil` og gitt
+> **falsk bestått** for et krav Mike aldri skrev kapittel om. Underpunkter bruker
+> `###`, som `_kapittelseksjoner` hopper over.
 
 ## Kvalitetsporter
 
