@@ -61,6 +61,46 @@ taushetserklæring (personal). Skjemaene er ikke løse filer på en disk: håndb
 får et eget **vedleggskapittel** som viser hvert skjema med bruksområde, filnavn
 og hjemmel, slik at dokumentasjonen henger sammen ved tilsyn.
 
+## NACE-basert kravmotor
+
+Kjeden er `organisasjonsnummer → Brønnøysund → NACE-kode → verifiserte hjemler`,
+slik at Harvey siterer «byggherreforskriften § 7» i stedet for generisk bransjetekst.
+
+- `brreg.py` — oppslag mot Enhetsregisteret (åpent API, ingen nøkkel). Validerer
+  MOD11-kontrollsiffer før nettverkskall, og skiller ugyldig nummer / ukjent
+  enhet / slettet enhet / tjeneste nede i egne feilkoder med norsk brukermelding.
+- `nace_krav.py` — slår NACE-kode opp mot databasen og bygger `<bransjekrav>`-blokken
+  Harvey får som avgrenset data.
+- `migrations/001_nace_kravmotor.sql` + `002_nace_seed.sql` — skjema og seed.
+
+**Tabellen `nace_forskriftskrav`** har én rad per paragraf, med `kilde_url` og
+`verifisert_dato`. En hjemmel uten dato er en hjemmel ingen har kontrollert.
+Den erstatter kolonnen `harvey_nace_krav.forskrifter` (`text[]`), som ikke kunne
+bære forskriftsnummer og paragraf strukturert. Kolonnen er beholdt, men utgått.
+
+**`bht_paakrevd` er tri-state.** `true`/`false` = vurdert mot bransjelista i
+FOR-2011-12-06-1355 § 13-1. `NULL` = ikke verifisert, og Harvey skal da flagge
+kravet for manuell vurdering framfor å anta at BHT er unødvendig. Lista lot seg
+ikke hente maskinelt fra Lovdata, så kun bygg/anlegg, helse og renhold er satt.
+
+**Dekning:** 17 NACE-koder er seedet. Er koden ikke dekket, svarer motoren
+`dekning: "ingen"` med tom hjemmelsliste, og promptblokken ber eksplisitt Harvey
+om å ikke dikte opp bransjeforskrifter.
+
+> **To feil funnet ved verifisering mot Lovdata (15.08.2026):** Harvey-prompten
+> siterte BHT-kravet som `FOR-2009-01-01-70` (finnes ikke — riktig er
+> FOR-2011-12-06-1355 § 13-1) og kjøre- og hviletid som `FOR-2007-02-02-190`
+> (riktig er FOR-2007-07-02-877). Begge er rettet.
+
+> **Rydding som gjenstår:** `harvey_nace_krav` inneholder 28 eldre rader på
+> formen `F41`, `Q86`, `N81`. Brønnøysund oppgir NACE etter SN2007 (`41.200`,
+> `86.211`), så de radene kan aldri treffes av et oppslag. De gir dubletter i
+> bransjevelgeren og bør slettes eller migreres.
+
+Tester: `python tests/test_nace_kravmotor.py`. Brreg-laget stubbes, så
+validering og feilhåndtering kjører uten nett; kjedetestene krever
+`SUPABASE_URL` + nøkkel og hoppes ellers over.
+
 ## Innføring og drift
 
 Dokumentene alene dekker ikke kravene — IK-forskriften § 4 krever at internkontroll

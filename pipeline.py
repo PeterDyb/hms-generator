@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 
 import eksport
+import nace_krav
 
 load_dotenv()
 
@@ -817,6 +818,10 @@ _KJENTE_PARAGRAFER = {
     # «§ 5 a»–«§ 5 e» er derfor bevisst utelatt, slik at hjemmelskontrollen flagger dem.
     "§ 5", "§ 5-1", "§ 5-2",
     "§ 6-1", "§ 6-2", "§ 6-5", "§ 7", "§ 7-1", "§ 7-2",
+    # Hjemler som kravmotoren seeder per NACE-kode (se nace_forskriftskrav):
+    # byggherreforskriften § 8/§ 10/§ 15, utførelsesforskriften § 10-1/§ 10-3,
+    # organiseringsforskriften § 8-1 (opplæring) og § 13-1 (BHT-bransjeliste).
+    "§ 8", "§ 8-1", "§ 10-1", "§ 10-3", "§ 13-1", "§ 15",
     "§ 8-19", "§ 8-24", "§ 9-6", "§ 10",
     "§ 10-4", "§ 10-6", "§ 10-8", "§ 10-9", "§ 10-11",
     "§ 12-1", "§ 12-5", "§ 12-8", "§ 12-9",
@@ -1111,12 +1116,17 @@ _RETRY_JSON = ("\n\nForrige svar var ikke gyldig JSON med påkrevde felter. "
 def run_harvey(session_id: str, company_info: dict) -> dict:
     run_id = _create_run(session_id, "harvey")
     nace_data = _fetch_nace_data(company_info.get("nace_kode"))
+    # Kravmotoren gir verifiserte forskriftshjemler per NACE-kode, slik at Harvey
+    # siterer «byggherreforskriften § 7» framfor generisk bransjetekst. Er koden
+    # ikke dekket, sier blokken det — Harvey skal da ikke dikte opp hjemler.
+    bransjekrav = nace_krav.hent_bransjekrav(company_info.get("nace_kode"), _supabase)
     try:
         system = _read_prompt("harvey_system.md")
         nace_section = (
             f"\n\nNACE-data fra database (autoritativ kilde):\n{json.dumps(nace_data, ensure_ascii=False, indent=2)}"
             if nace_data else "\n\nIngen NACE-kode oppgitt — bruk generelle krav."
         )
+        nace_section += "\n\n" + nace_krav.til_promptblokk(bransjekrav)
         user_msg = (
             "Analyser følgende bedrift og returner strukturert JSON.\n\n"
             + _bedriftsblokk(company_info) + nace_section
