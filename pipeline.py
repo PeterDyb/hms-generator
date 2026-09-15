@@ -911,8 +911,15 @@ def _er_hms_maal_kapittel(kap: dict, dok_navn: str) -> bool:
     return dok_navn == "HMS-håndboken" and kap.get("nummer") == 1
 
 
-def _kapittelfeil(tekst: str, kap: dict, dok_navn: str = "") -> list[str]:
-    """Kvalitetsport per kapittel — kjøres på alt Mike skriver."""
+def _kapittelfeil(tekst: str, kap: dict, dok_navn: str = "",
+                  company_info: dict | None = None) -> list[str]:
+    """Kvalitetsport per kapittel — kjøres på alt Mike skriver.
+
+    Faktasjekken hører hjemme HER, ikke bare på det ferdige dokumentet.
+    Kapittelporten gir Mike to forsøk på å rette seg; dokumentporten gir null
+    og dreper leveransen. En frist som var gyldig da kapittelet ble skrevet og
+    utløpt da dokumentet ble satt sammen, skal rettes — ikke stoppe alt.
+    """
     feil = []
     overskrift = f"## {kap['nummer']}. {kap['tittel']}"
     if overskrift not in tekst:
@@ -926,6 +933,8 @@ def _kapittelfeil(tekst: str, kap: dict, dok_navn: str = "") -> list[str]:
         feil.append(f"Plassholder: «{m}»")
     if _er_hms_maal_kapittel(kap, dok_navn):
         feil.extend(eksport.hms_maal_feil(tekst))
+    if company_info:
+        feil.extend(_faktafeil(tekst, company_info))
     return feil
 
 
@@ -1524,7 +1533,7 @@ def _skriv_kapittel(system: str, harvey_data: dict, company_info: dict, kap: dic
             time.sleep(0.05)
         else:
             tekst = _kall_modell("mike", system, _bruker_innhold(felles, variabelt), on_chunk)
-        problemer = _kapittelfeil(tekst, kap, dok_navn)
+        problemer = _kapittelfeil(tekst, kap, dok_navn, company_info)
         if not problemer:
             return tekst.strip()
         variabelt += "\n\nForrige forsøk hadde disse feilene — rett dem: " + "; ".join(problemer)
