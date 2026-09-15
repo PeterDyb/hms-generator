@@ -152,12 +152,33 @@ def til_promptblokk(bransje: dict, sekundaerbransjer: list[dict] | None = None) 
         if b["dokumentkrav"]:
             ut.append("Dokumenter bransjen må ha utover IK-forskriften § 5: "
                       + "; ".join(b["dokumentkrav"]))
-        if b["forskriftskrav"]:
+        # Skill hjemler som er kontrollert mot kilden fra hjemler som ennå ikke
+        # er det. Uten dette skillet ble ALT presentert som «verifisert», og en
+        # ukontrollert paragrafhenvisning ble sitert som fasit — nøyaktig den
+        # feilen som ga «§ 2A-3» for ekstern varsling og «hvert 3. år» for
+        # FSE-førstehjelp.
+        verifiserte = [f for f in b["forskriftskrav"] if f.get("verifisert_dato")]
+        ukontrollerte = [f for f in b["forskriftskrav"] if not f.get("verifisert_dato")]
+
+        if verifiserte:
             ut.append("Verifiserte hjemler — bruk NØYAKTIG disse henvisningene:")
-            for f in b["forskriftskrav"]:
+            for f in verifiserte:
                 ut.append(
                     f"  - {f['forskrift_navn']} ({f['forskrift_nummer']}) {f['paragraf']}: "
                     f"{f['krav']}"
+                )
+
+        if ukontrollerte:
+            ut.append(
+                "Krav som GJELDER bransjen, men der paragrafnummeret ikke er "
+                "kontrollert mot kilden. Temaet SKAL dekkes i håndboken. Vis til "
+                "forskriften ved navn og nummer — ikke oppgi paragrafnummer for "
+                "disse, og ikke gjett på frekvenser eller terskelverdier som ikke "
+                "står i kravteksten:"
+            )
+            for f in ukontrollerte:
+                ut.append(
+                    f"  - {f['forskrift_navn']} ({f['forskrift_nummer']}): {f['krav']}"
                 )
         return ut
 
