@@ -56,13 +56,25 @@ Stikkordene skal være konkrete nok til at Mike kan skrive ferdig tekst uten å 
      varselet innen rimelig tid
    - **§ 2A-4** — forbud mot gjengjeldelse
    - **§ 2A-5** — oppreisning og erstatning ved gjengjeldelse
-   - **§ 2A-6** — plikten til å **ha skriftlige rutiner** for intern varsling
-   - **§ 2A-7** — krav til hva varslingsrutinen skal inneholde
+   - **§ 2A-6** — plikten til å **ha skriftlige rutiner** for intern varsling,
+     inkludert kravene til hva rutinen skal inneholde
+   - **§ 2A-7** — taushetsplikt ved ekstern varsling til offentlig myndighet
+   - **§ 2A-8** — Diskrimineringsnemndas myndighet i gjengjeldelsessaker
+
+   (Kapittel 2A har åtte paragrafer, § 2A-1 til § 2A-8. Listen over er
+   kontrollert mot Lovdata 15.09.2026.)
 8. **Sykefravær og tilrettelegging** — oppfølgingsplan innen 4 uker, dialogmøte 1 innen 7 uker (AML § 4-6, Ftrl. kap. 8). Egenmelding: 3 dager, 4 ganger per 12 mnd er lovens minimum — utvidet ordning KUN hvis bedriften har innført det (sjekk bedriftsinformasjonen, anta aldri)
 9. **Verneutstyr og arbeidsrutiner** — basert på Harveys risikofaktorer (AML § 3-2)
 10. **Opplæring og kompetanse** — HMS-opplæring for leder (AML § 3-5) og verneombud (AML § 6-5), nyansattrutine
 11. **Beredskap, brann og førstehjelp** — nødnumre, evakuering, brannøvelse årlig (AML § 4-4)
-12. **Gravide og ammende arbeidstakere** — risikovurdering, tilrettelegging, ammefri (AML § 12-8)
+12. **Gravide og ammende arbeidstakere** — risikovurdering og tilrettelegging,
+    og ammefri. **AML § 12-8 gjelder KUN ammefri** (kontrollert mot Lovdata
+    15.09.2026) og skal ikke brukes som hjemmel for risikovurdering,
+    tilrettelegging eller rett til annet arbeid. Kapittel 12 har ingen
+    bestemmelse om tilrettelegging ved graviditet, og AML § 4-6 gjelder
+    redusert arbeidsevne etter ulykke, sykdom eller slitasje — ikke graviditet.
+    Omtal tilrettelegging og risikovurdering uten å oppgi paragrafnummer med
+    mindre hjemmelen står i Harveys lovanalyse
 13. **Revisjon og forbedring** — årlig gjennomgang av HMS-systemet: hva som gjennomgås,
     når på året, hvem som deltar, og at gjennomgangen dokumenteres skriftlig i vedlegget
     «Årlig gjennomgang av HMS-systemet» (IK-forskriften § 5 andre ledd nr. 8)
