@@ -44,15 +44,29 @@ Stikkordene skal være konkrete nok til at Mike kan skrive ferdig tekst uten å 
 4. **Kartlegging og risikovurdering** — metodikk (sannsynlighet × konsekvens), frekvens (årlig + ved endringer), referanse til Excel-vedlegget (IK-forskriften § 5 andre ledd nr. 6, AML § 4-1)
 5. **Avvikshåndtering** — hva er et avvik, meldeplikt, alvorlige hendelser til Arbeidstilsynet straks (AML § 5-2), referanse til avviksskjema (IK-forskriften § 5 andre ledd nr. 7)
 6. **Psykososialt arbeidsmiljø** — trakassering, mobbing, konflikthåndtering, stress (AML § 4-3)
-7. **Sykefravær og tilrettelegging** — oppfølgingsplan innen 4 uker, dialogmøte 1 innen 7 uker (AML § 4-6, Ftrl. kap. 8). Egenmelding: 3 dager, 4 ganger per 12 mnd er lovens minimum — utvidet ordning KUN hvis bedriften har innført det (sjekk bedriftsinformasjonen, anta aldri)
-8. **Verneutstyr og arbeidsrutiner** — basert på Harveys risikofaktorer (AML § 3-2)
-9. **Opplæring og kompetanse** — HMS-opplæring for leder (AML § 3-5) og verneombud (AML § 6-5), nyansattrutine
-10. **Beredskap, brann og førstehjelp** — nødnumre, evakuering, brannøvelse årlig (AML § 4-4)
-11. **Gravide og ammende arbeidstakere** — risikovurdering, tilrettelegging, ammefri (AML § 12-8)
-12. **Revisjon og forbedring** — årlig gjennomgang av HMS-systemet: hva som gjennomgås,
+7. **Varsling om kritikkverdige forhold** — skriftlig rutine med **konkret varslingskanal, navngitt mottaker og en alternativ kanal** for varsling som gjelder nærmeste leder. Kapittelet er obligatorisk i HMS-håndboken — kapitlene om avvikshåndtering og psykososialt arbeidsmiljø krysshenviser til det.
+   Bruk **nøyaktig disse hjemlene** — paragrafene i kap. 2A forveksles lett, og
+   feil nummer er en lovfeil som stopper leveransen:
+   - **§ 2A-1** — retten til å varsle om kritikkverdige forhold
+   - **§ 2A-2** — fremgangsmåten ved varsling: hva som er forsvarlig varsling, at
+     varsling til tilsynsmyndighet (Arbeidstilsynet) **alltid** er forsvarlig, og
+     arbeidsgivers svar innen rimelig tid. Dette er hjemmelen for **ekstern
+     varsling** — ikke § 2A-3.
+   - **§ 2A-3** — arbeidsgivers **aktivitetsplikt**: plikten til å undersøke
+     varselet innen rimelig tid
+   - **§ 2A-4** — forbud mot gjengjeldelse
+   - **§ 2A-5** — oppreisning og erstatning ved gjengjeldelse
+   - **§ 2A-6** — plikten til å **ha skriftlige rutiner** for intern varsling
+   - **§ 2A-7** — krav til hva varslingsrutinen skal inneholde
+8. **Sykefravær og tilrettelegging** — oppfølgingsplan innen 4 uker, dialogmøte 1 innen 7 uker (AML § 4-6, Ftrl. kap. 8). Egenmelding: 3 dager, 4 ganger per 12 mnd er lovens minimum — utvidet ordning KUN hvis bedriften har innført det (sjekk bedriftsinformasjonen, anta aldri)
+9. **Verneutstyr og arbeidsrutiner** — basert på Harveys risikofaktorer (AML § 3-2)
+10. **Opplæring og kompetanse** — HMS-opplæring for leder (AML § 3-5) og verneombud (AML § 6-5), nyansattrutine
+11. **Beredskap, brann og førstehjelp** — nødnumre, evakuering, brannøvelse årlig (AML § 4-4)
+12. **Gravide og ammende arbeidstakere** — risikovurdering, tilrettelegging, ammefri (AML § 12-8)
+13. **Revisjon og forbedring** — årlig gjennomgang av HMS-systemet: hva som gjennomgås,
     når på året, hvem som deltar, og at gjennomgangen dokumenteres skriftlig i vedlegget
     «Årlig gjennomgang av HMS-systemet» (IK-forskriften § 5 andre ledd nr. 8)
-13. **Bransjespesifikke kapitler** — ett kapittel per krav fra Harvey med `alvorlighet = "høyt"` eller `"svært høyt"`. Konkrete prosedyrer, ikke generelle fraser.
+14. **Bransjespesifikke kapitler** — ett kapittel per krav fra Harvey med `alvorlighet = "høyt"` eller `"svært høyt"`. Konkrete prosedyrer, ikke generelle fraser.
 
 ## Personalhåndboken — obligatoriske kapitler (hvis bestilt)
 
@@ -64,7 +78,7 @@ Stikkordene skal være konkrete nok til at Mike kan skrive ferdig tekst uten å 
 6. **Ferie og feriepenger** — 25 virkedager (31 for 60+), feriepenger 10,2 % (**12,5 %** for 60+), opptjeningsår vs. ferieår, 3 uker sammenhengende hovedferie (Ferieloven § 5, § 7, § 10)
 7. **Sykefravær og egenmelding** — egenmelding 3 dager/4 ganger (Ftrl. § 8-24, utvidet ordning kun hvis innført), arbeidsgiverperiode 16 dager (Ftrl. § 8-19)
 8. **Permisjoner** — foreldrepermisjon (AML § 12-5), ammefri (§ 12-8), omsorgsdager: 10 per forelder per år, **15 ved 3+ barn** (Ftrl. § 9-6), velferdspermisjon
-9. **Varsling** — rett til å varsle (AML § 2A-1), rutine (§ 2A-6), vern mot gjengjeldelse (§ 2A-4), ekstern varsling til Arbeidstilsynet
+9. **Varsling** — rett til å varsle (AML § 2A-1), fremgangsmåte og ekstern varsling til Arbeidstilsynet (**§ 2A-2**, ikke § 2A-3), arbeidsgivers aktivitetsplikt (**§ 2A-3**), vern mot gjengjeldelse (§ 2A-4), plikt til skriftlig varslingsrutine (**§ 2A-6**). Se kapittelet om varsling i HMS-håndboken for full paragrafoversikt — numrene forveksles lett
 10. **Likebehandling** — nulltoleranse, lønnskartlegging hvis `loennskartlegging_paakrevd = true` (Likestillings- og diskrimineringsloven § 26 a)
 11. **Personvern** — hva som behandles, ansattes rettigheter (GDPR art. 15–17), innsyn i e-post (e-postforskriften)
 12. **Arbeidsreglement** — kun hvis `arbeidsreglement_paakrevd = true` (AML § 14-16)

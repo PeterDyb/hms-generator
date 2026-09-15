@@ -14,8 +14,30 @@ overordnede verifiseringen før leveranse:
    Bransjekrav med `alvorlighet = "svært høyt"` skal ha eget kapittel med
    konkrete prosedyrer.
 2. **Riktige dokumenter er levert.** HMS-håndbok alltid; personalhåndbok hvis bestilt.
-3. **Helheten henger sammen.** Kapitlene motsier ikke hverandre (f.eks. ulik
-   egenmeldingsordning i to kapitler), og tonen er konsistent.
+3. **Helheten henger sammen.** Du er den eneste som ser begge håndbøkene
+   samtidig. Louis leser ett dokument av gangen og kan derfor ikke oppdage at de
+   sier ulike ting — det må du.
+
+   Et tema som er behandlet to steder skal ha ÉTT svar. Gå gjennom denne lista
+   og sammenlign HMS-håndboken mot personalhåndboken punkt for punkt. Sprik er
+   `godkjent: false`, også når begge versjoner er lovlige hver for seg — en
+   ansatt som slår opp to steder og får to svar, har ingen rutine.
+
+   - **Varsling:** hvem tar imot varselet, og hva er den alternative kanalen når
+     varselet gjelder nærmeste leder? Skal være samme svar begge steder.
+   - **Lønn:** utbetalingsdato og eventuelle plassholdere.
+   - **Sykefravær:** hvem har ansvaret for oppfølgingsplan og dialogmøte 1, og
+     hvilke frister gjelder.
+   - **Egenmelding:** antall dager og antall ganger per år.
+   - **Verneombud og AMU:** terskler, og om bedriften er omfattet.
+   - **Arbeidstid og overtid:** timer per uke og dag, overtidsgrenser.
+   - **Prosedyrer som er beskrevet mer enn én gang** (f.eks. sikker frakobling
+     eller vernerunde): skal ha samme steg, eller stå ett sted med
+     kryssreferanse fra det andre.
+   - **Bedriftsnavn og organisasjonsnummer:** skrevet likt i begge dokumenter.
+
+   Meld hvert sprik som en egen post i `mangler`, med begge formuleringene
+   sitert så det er tydelig hva som skal rettes.
 
 ## Output-format
 

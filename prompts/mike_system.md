@@ -117,7 +117,7 @@ alternativ kanal hvis varselet gjelder daglig leder, absolutt vern mot gjengjeld
 - Når et kapittel beskriver en rutine som har et skjema, henvis til skjemaet ved navn
   («meldes på skjemaet Avviksmelding», «dokumenteres i Årlig gjennomgang av HMS-systemet»).
   Koden legger inn en samlet vedleggsoversikt til slutt — du skal ikke lage den selv
-- Ingen «[fyll inn]», «TBD» eller lignende — eneste tillatte plassholder er «[Navn på pensjonsleverandør]»
+- Ingen «[fyll inn]», «TBD» eller lignende — eneste tillatte plassholdere er «[Navn på pensjonsleverandør]» og «[Navn på BHT-leverandør]»
 - Bruk Harveys risikofaktorer og NACE-krav aktivt — gjør innholdet konkret for bransjen
 - Svært høyt risikonivå → konkrete, detaljerte sikkerhetsprosedyrer
 - Kapitlet skal stå alene — en ansatt skal kunne slå opp og finne svaret
