@@ -155,7 +155,11 @@ class SessionRequest(BaseModel):
     @classmethod
     def validate_nace(cls, v):
         v = v.strip()
-        if v and not re.match(r"^[A-Z]\d{1,2}(\.\d{1,2})?$", v):
+        # To formater lever side om side i harvey_nace_krav:
+        #   «F43.21», «A01», «P85.1»  — eldre kode med næringsbokstav
+        #   «43.210», «47.111»        — gjeldende femsifret SN2007-kode
+        # Nedtrekkslisten serverer begge, så validatoren må godta begge.
+        if v and not re.match(r"^([A-Z]\d{1,2}(\.\d{1,2})?|\d{2}\.\d{3})$", v):
             raise ValueError("Ugyldig NACE-kode.")
         return v
 
@@ -176,6 +180,38 @@ class SessionRequest(BaseModel):
 
 
 # ─── Endepunkter ──────────────────────────────────────────────────────────────
+
+# ─── Opprydding ved oppstart ─────────────────────────────────────────────────
+
+_FORELDET_MINUTTER = 45
+
+
+@app.on_event("startup")
+def rydd_foreldreloese_kjoringer():
+    """Marker jobber som døde med forrige prosess.
+
+    Pipelinen kjører som BackgroundTask i denne prosessen. Restarter serveren
+    — deploy, krasj, Ctrl-C — forsvinner jobben, men raden i basen blir stående
+    på «running» for alltid. Kunden venter da på noe som aldri kommer.
+    Alt som fortsatt står som running ved oppstart kan ikke ha en levende
+    prosess bak seg, og merkes derfor som feilet.
+    """
+    from datetime import datetime, timedelta, timezone
+    grense = (datetime.now(timezone.utc) - timedelta(minutes=_FORELDET_MINUTTER)).isoformat()
+    try:
+        doede = _supabase.table("sessions").select("id") \
+            .eq("status", "running").lt("created_at", grense).execute().data or []
+        for s in doede:
+            _supabase.table("sessions").update({"status": "failed"}).eq("id", s["id"]).execute()
+            _supabase.table("agent_runs").update({
+                "status": "failed",
+                "output": "Feil: avbrutt fordi serveren startet på nytt mens jobben kjørte.",
+            }).eq("session_id", s["id"]).eq("status", "running").execute()
+        if doede:
+            print(f"[oppstart] merket {len(doede)} avbrutt(e) generering(er) som feilet")
+    except Exception as e:
+        print(f"[oppstart] kunne ikke rydde foreldreløse kjøringer: {e}")
+
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_landing():
@@ -200,10 +236,17 @@ async def auth_check(request: Request, _: str = Depends(require_api_key)):
 @app.get("/api/nace")
 @limiter.limit("60/minute")
 async def get_nace_options(request: Request):
-    """Lever NACE-alternativer fra databasen — ingen auth nødvendig (offentlig data)."""
+    """Lever NACE-alternativer fra databasen — ingen auth nødvendig (offentlig data).
+
+    Kun koder merket gjeldende. De utgåtte bokstavkodene (F41, Q86) har ingen
+    forskriftshjemler, så en håndbok generert på dem får ingen bransjetilpasning
+    — og kvalitetsportene godkjenner den likevel, fordi de kontrollerer mot en
+    tom kravliste. Bedre å tilby færre bransjer med reell dekning.
+    """
     result = _supabase.table("harvey_nace_krav") \
         .select("nace_kode, nace_navn, nace_hovedgruppe, risikonivaa") \
-        .order("nace_kode") \
+        .eq("gjeldende", True) \
+        .order("nace_navn") \
         .execute()
     return result.data or []
 

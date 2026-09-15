@@ -4,8 +4,11 @@ HMS-generator pipeline — Harvey → Donna → Mike → Jessica
 Sett MOCK_MODE=true i .env for å kjøre lokalt uten API-kreditter.
 """
 import os
+import re
 import time
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from dotenv import load_dotenv
 from supabase import create_client
@@ -21,15 +24,51 @@ _SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("S
 _supabase = create_client(os.environ["SUPABASE_URL"], _SUPABASE_KEY)
 
 MOCK_MODE   = os.getenv("MOCK_MODE", "false").lower() == "true"
-MODEL       = "claude-sonnet-4-6"
-TEMPERATURE = 0.2  # compliance-dokumenter skal være deterministiske
-MAX_TOKENS  = {"harvey": 4096, "donna": 8192, "mike": 8192, "louis": 8192, "jessica": 8192}
+MODEL       = "claude-sonnet-5"
+# Sonnet 5 tar ikke temperature — parameteren er fjernet i modellfamilien, og
+# sendes den, svarer API-et 400. Determinismen compliance-dokumenter trenger
+# ligger uansett ikke i temperature, men i kvalitetsportene under: de er kode,
+# og kode lar seg ikke overtale.
+#
+# Thinking er adaptiv og teller mot max_tokens. Grensene under er derfor hevet
+# godt over det et kapittel trenger — max_tokens er en hard feil i denne
+# pipelinen (avkuttede håndbøker leveres aldri), så takhøyde er billigere enn
+# en stoppet leveranse. Du betaler for tokens som faktisk brukes, ikke for taket.
+# Louis og Jessica får HELE dokumentet som input (~120 000 tegn) og bruker mye
+# av budsjettet på thinking før de rekker å skrive funnlisten. Første ekte
+# kjøring døde på louis=24000 uten å produsere ett synlig tegn. Sonnet 5 tar
+# 128k output når vi strømmer — og det gjør vi — så taket koster ingenting før
+# det faktisk brukes.
+MAX_TOKENS  = {"harvey": 32000, "donna": 32000, "mike": 32000, "louis": 64000, "jessica": 64000}
 MIN_KAPITTEL_TEGN = 400
+# Antall ganger et modellkall prøves om igjen når forbindelsen ryker.
+_NETTVERK_FORSOK = 4
+# Hvor mange kapitler Mike skriver samtidig. Kapitlene er uavhengige av
+# hverandre, så dette er ren veggklokke-gevinst — men hold tallet moderat så vi
+# ikke løper inn i rate limits.
+MIKE_PARALLELLE = int(os.getenv("MIKE_PARALLELLE", "6"))
 PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 if not MOCK_MODE:
     import anthropic
-    _anthropic = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    # Identitetskoblede API-nøkler (knyttet til en bruker, ikke til en workspace)
+    # avvises med 400 om ikke forespørselen sier hvilken workspace den handler i.
+    # Vanlige workspace-nøkler trenger ikke headeren — derfor settes den kun når
+    # ANTHROPIC_WORKSPACE_ID finnes.
+    # Adaptiv thinking gir lange stillheter i strømmen: modellen tenker uten å
+    # sende tokens. Standardtimeouten tåler ikke det — vi har sett både
+    # «read operation timed out» og «[Errno 35] Resource temporarily
+    # unavailable» midt i Mikes kapittelskriving. read=900 gir modellen 15
+    # minutter stillhet før forbindelsen regnes som død.
+    _anthropic_kwargs = {
+        "api_key": os.environ["ANTHROPIC_API_KEY"],
+        "timeout": anthropic.Timeout(2400.0, connect=15.0, read=900.0, write=60.0),
+        "max_retries": 5,
+    }
+    _workspace_id = os.getenv("ANTHROPIC_WORKSPACE_ID", "").strip()
+    if _workspace_id:
+        _anthropic_kwargs["default_headers"] = {"anthropic-workspace-id": _workspace_id}
+    _anthropic = anthropic.Anthropic(**_anthropic_kwargs)
 
 
 def _read_prompt(filename: str) -> str:
@@ -38,7 +77,6 @@ def _read_prompt(filename: str) -> str:
 
 # ─── NACE-oppslag ────────────────────────────────────────────────────────────
 
-import re
 
 def _fetch_nace_data(nace_kode: str) -> dict | None:
     """Hent NACE-rad fra Supabase. Returnerer None hvis ikke funnet."""
@@ -802,7 +840,23 @@ _PLACEHOLDER_RE = re.compile(
     r"\[fyll inn[^\]]*\]|\bTBD\b|\bXXX+\b|\[dato\]|\[navn\]|\[beskriv[^\]]*\]",
     re.IGNORECASE,
 )
-_ALLOWED_PLACEHOLDERS = ("[Navn på pensjonsleverandør]",)
+# Leverandørnavn systemet umulig kan vite — bedriften fyller dem inn selv.
+# BHT-leverandøren står i samme kategori som pensjonsleverandøren: Harveys
+# analyse sier om BHT er påkrevd, ikke hvem bedriften har avtale med.
+# Fakta bedriften ikke har oppgitt, men som håndboken må omtale. Uten en
+# kanonisk plassholder finner modellen på en verdi — og finner på en ANNEN
+# verdi neste gang temaet nevnes. Slik oppsto «lønn utbetales normalt den 1.»
+# i kapittel 2 og «den 25.» i kapittel 5 av samme dokument.
+_UOPPGITTE_FAKTA = {
+    "lonnsdato":            "[Lønnsutbetalingsdato]",
+    "bht_leverandor":       "[Navn på BHT-leverandør]",
+    "pensjonsleverandor":   "[Navn på pensjonsleverandør]",
+    "arbeidstid_uke":       "[Ukentlig arbeidstid]",
+    "tariffavtale":         "[Tariffavtale]",
+}
+
+
+_ALLOWED_PLACEHOLDERS = tuple(_UOPPGITTE_FAKTA.values())
 
 _PARAGRAF_RE = re.compile(r"§\s*\d+[A-Za-z]*(?:-\d+)?(?:\s*[a-e]\b)?")
 
@@ -875,6 +929,46 @@ def _kapittelfeil(tekst: str, kap: dict, dok_navn: str = "") -> list[str]:
     return feil
 
 
+def _faktafeil(doc: str, company_info: dict) -> list[str]:
+    """Kontroller at dokumentet gjengir fakta konsistent.
+
+    Faktaregisteret er en instruksjon, og instruksjoner glipper over 120 000
+    tegn skrevet av tretten uavhengige kall. Denne porten er kode, og fanger
+    det registeret ba om men ikke kunne garantere.
+    """
+    feil: list[str] = []
+    navn = (company_info.get("bedriftsnavn") or "").strip()
+
+    # Bedriftsnavnet med annen bokstavbruk enn det kunden oppga.
+    if navn and len(navn) > 2:
+        varianter = set(re.findall(re.escape(navn), doc, flags=re.IGNORECASE))
+        avvik = {v for v in varianter if v != navn}
+        if avvik:
+            vis = ", ".join(f"«{v}»" for v in sorted(avvik)[:3])
+            feil.append(
+                f"Bedriftsnavnet skrives på flere måter: {vis} — skal være «{navn}» overalt"
+            )
+
+    # Frist i fortiden. En handlingsplan med utløpt frist er verdiløs, og det
+    # er det første en revisor ser etter.
+    i_dag = time.strftime("%Y-%m-%d")
+    for dag, maaned, aar in re.findall(r"\b(\d{2})\.(\d{2})\.(20\d{2})\b", doc):
+        try:
+            dato = f"{aar}-{maaned}-{dag}"
+            if not (1 <= int(maaned) <= 12 and 1 <= int(dag) <= 31):
+                continue
+        except ValueError:
+            continue
+        if dato < i_dag:
+            feil.append(
+                f"Frist i fortiden: {dag}.{maaned}.{aar} i et dokument datert "
+                f"{time.strftime('%d.%m.%Y')}"
+            )
+            break  # én melding holder — Mike ser mønsteret
+
+    return feil
+
+
 def _kvalitetsfeil(doc: str, kapitler: list[dict], dok_navn: str = "") -> list[str]:
     """Kvalitetsport for sammensatt dokument."""
     feil = []
@@ -894,6 +988,50 @@ def _kvalitetsfeil(doc: str, kapitler: list[dict], dok_navn: str = "") -> list[s
 
 
 # ─── Prompt-bygging ──────────────────────────────────────────────────────────
+
+
+
+def _faktaregister(company_info: dict) -> str:
+    """Kanoniske verdier Mike skal gjengi, ikke gjenskape.
+
+    Ett kapittel skrives uavhengig av de tolv andre, så ingenting garanterer at
+    modellen staver bedriftsnavnet likt eller husker hva den skrev om lønnsdato
+    forrige gang. Første ekte leveranse hadde 36 forekomster av «Elektro Sør»
+    mot 64 av «Elektro sør» i samme dokument.
+
+    Alt her er enten et faktum bedriften har oppgitt, eller en plassholder
+    bedriften skal fylle ut selv. Ingen tredje kategori — og særlig ingen
+    verdier modellen finner på.
+    """
+    navn = (company_info.get("bedriftsnavn") or "").strip()
+    orgnr = (company_info.get("organisasjonsnummer") or "").strip()
+    ansatte = company_info.get("antall_ansatte")
+    kontakt = (company_info.get("kontaktperson") or "").strip()
+
+    kjent = [f'bedriftsnavn = "{navn}"  ← skriv ALLTID nøyaktig slik, samme store og små bokstaver']
+    if orgnr:
+        kjent.append(f'organisasjonsnummer = "{orgnr}"')
+    if ansatte:
+        kjent.append(f'antall_ansatte = {ansatte}')
+    if kontakt:
+        kjent.append(f'kontaktperson = "{kontakt}"')
+    kjent.append(f'dokumentdato = "{time.strftime("%d.%m.%Y")}"')
+
+    linjer = ["KJENTE FAKTA — gjengi nøyaktig, aldri omskriv eller forkort:"]
+    linjer += [f"  {k}" for k in kjent]
+    linjer.append("")
+    linjer.append(
+        "IKKE OPPGITT — bruk plassholderen ordrett hver gang temaet nevnes. "
+        "Ikke finn på en verdi, og ikke bruk to ulike formuleringer for samme felt:"
+    )
+    linjer += [f"  {navn_} = {plassholder}" for navn_, plassholder in _UOPPGITTE_FAKTA.items()]
+    linjer.append("")
+    linjer.append(
+        f"Alle frister og datoer du skriver skal ligge ETTER {time.strftime('%d.%m.%Y')}. "
+        "En frist i fortiden er en feil, ikke et eksempel."
+    )
+    return "<faktaregister>\n" + "\n".join(linjer) + "\n</faktaregister>"
+
 
 def _bedriftsblokk(company_info: dict) -> str:
     return (
@@ -949,30 +1087,114 @@ def _stream_mock(run_id: str, full_text: str, prev: str = "") -> str:
     return output
 
 
+def _er_nettverksfeil(e: Exception) -> bool:
+    """Skiller feil det er verdt å prøve om igjen fra feil som er endelige.
+
+    Timeout, brutt forbindelse, rate limit og 5xx går over av seg selv. En
+    ugyldig forespørsel eller feil nøkkel gjør ikke det, og skal boble opp med
+    en gang i stedet for å bruke fire forsøk på å bekrefte seg selv.
+    """
+    if MOCK_MODE:
+        return False
+    if isinstance(e, (anthropic.APITimeoutError, anthropic.APIConnectionError,
+                      anthropic.RateLimitError, anthropic.InternalServerError)):
+        return True
+    if isinstance(e, anthropic.APIStatusError):
+        return e.status_code >= 500
+    # httpx/socket-nivå: «[Errno 35] Resource temporarily unavailable»,
+    # «read operation timed out» — disse kommer ikke alltid pakket i en
+    # SDK-klasse når strømmen først er åpnet.
+    tekst = f"{type(e).__name__}: {e}".lower()
+    return any(m in tekst for m in (
+        "timed out", "timeout", "temporarily unavailable", "connection",
+        "errno 35", "errno 54", "errno 60", "broken pipe", "incomplete",
+    ))
+
+
+def _system_blokk(system: str) -> list[dict]:
+    """Systemprompten som cachebar blokk. Den er identisk i alle kall til samme
+    agent, og for Mike gjentas den én gang per kapittel — uten caching betaler
+    vi full pris for de samme tokenene tretten ganger."""
+    return [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+
+
+def _bruker_innhold(felles: str, variabelt: str = "") -> list[dict]:
+    """Delt kontekst først (cachebar), det som varierer per kall til slutt.
+    Rekkefølgen er ikke kosmetisk: caching er et prefiksoppslag, så alt som
+    varierer må ligge etter siste cache_control-blokk."""
+    blokker = [{"type": "text", "text": felles, "cache_control": {"type": "ephemeral"}}]
+    if variabelt:
+        blokker.append({"type": "text", "text": variabelt})
+    return blokker
+
+
+def _kall_modell(agent: str, system: str, innhold, on_chunk=None) -> str:
+    """Ett strømmet modellkall med retry på nettverksfeil.
+
+    SDK-ens innebygde retry dekker feil som oppstår FØR strømmen åpnes. Ryker
+    forbindelsen underveis — som den har gjort tre ganger under Mikes lange
+    thinking-pauser — må hele kallet gjøres om igjen, og det er det denne
+    løkken gjør.
+    """
+    meldinger = [{"role": "user", "content": innhold}]
+    siste_feil = None
+
+    for forsok in range(_NETTVERK_FORSOK):
+        tekst = ""
+        try:
+            with _anthropic.messages.stream(
+                model=MODEL,
+                max_tokens=MAX_TOKENS[agent],
+                thinking={"type": "adaptive"},
+                system=_system_blokk(system),
+                messages=meldinger,
+            ) as stream:
+                for chunk in stream.text_stream:
+                    tekst += chunk
+                    if on_chunk:
+                        on_chunk(tekst)
+                final = stream.get_final_message()
+
+            if final.stop_reason == "max_tokens":
+                raise PipelineError(
+                    f"{agent}: svaret ble avkuttet (max_tokens={MAX_TOKENS[agent]}). "
+                    "Leveransen stoppes i stedet for å levere et ufullstendig dokument."
+                )
+            return tekst
+
+        except PipelineError:
+            raise  # kvalitetsfeil skal ikke prøves om igjen
+        except Exception as e:
+            if not _er_nettverksfeil(e):
+                raise
+            siste_feil = e
+            if forsok < _NETTVERK_FORSOK - 1:
+                pause = 5 * (2 ** forsok)
+                print(f"[{agent}] nettverksfeil ({type(e).__name__}: {e}) — "
+                      f"nytt forsøk om {pause}s ({forsok + 2}/{_NETTVERK_FORSOK})", flush=True)
+                time.sleep(pause)
+
+    raise PipelineError(
+        f"{agent}: forbindelsen til Claude røk {_NETTVERK_FORSOK} ganger på rad. "
+        f"Siste feil: {type(siste_feil).__name__}: {siste_feil}"
+    )
+
+
 def _stream_real(run_id: str, agent: str, system: str, user_message: str, prev: str = "") -> str:
-    output = prev
-    last_save = len(prev)
+    """Sekvensielt kall som strømmer til agent_runs underveis (Harvey, Donna,
+    Louis, Jessica). Mike går via _kall_modell direkte fordi kapitlene hans
+    kjører parallelt og ikke kan dele én skriveposisjon."""
+    sist_lagret = [len(prev)]
 
-    with _anthropic.messages.stream(
-        model=MODEL,
-        max_tokens=MAX_TOKENS[agent],
-        temperature=TEMPERATURE,
-        system=system,
-        messages=[{"role": "user", "content": user_message}],
-    ) as stream:
-        for chunk in stream.text_stream:
-            output += chunk
-            if len(output) - last_save >= 200:
-                _update_run(run_id, output)
-                last_save = len(output)
-        final = stream.get_final_message()
+    def lagre(tekst: str):
+        samlet = prev + tekst
+        if len(samlet) - sist_lagret[0] >= 200:
+            _update_run(run_id, samlet)
+            sist_lagret[0] = len(samlet)
 
+    tekst = _kall_modell(agent, system, _bruker_innhold(user_message), on_chunk=lagre)
+    output = prev + tekst
     _update_run(run_id, output)
-    if final.stop_reason == "max_tokens":
-        raise PipelineError(
-            f"{agent}: svaret ble avkuttet (max_tokens={MAX_TOKENS[agent]}). "
-            "Leveransen stoppes i stedet for å levere et ufullstendig dokument."
-        )
     return output
 
 
@@ -1039,9 +1261,19 @@ def _mock_donna(company_info: dict) -> str:
          "stikkord": ["metodikk", "årlig frekvens", "tiltaksplan"], "hjemler": ["AML § 4-1"]},
         {"nummer": 4, "tittel": "Avvikshåndtering", "formaal": "Fange opp og lukke avvik",
          "stikkord": ["meldeplikt", "behandling", "lukking"], "hjemler": ["AML § 5-1"]},
-        {"nummer": 5, "tittel": "Beredskap, brann og førstehjelp", "formaal": "Være forberedt på alvorlige hendelser",
+        # Varsling og arbeidsreglement er med fordi kvalitetsporten på Donnas
+        # plan krever dem — mock-data som ikke tåler de samme portene som
+        # produksjon, tester noe annet enn det systemet faktisk gjør.
+        {"nummer": 5, "tittel": "Varsling om kritikkverdige forhold",
+         "formaal": "Gi ansatte en trygg vei å melde fra",
+         "stikkord": ["varslingskanal", "mottaker", "alternativ kanal", "gjengjeldelsesvern"],
+         "hjemler": ["AML § 2A-1", "AML § 2A-4"]},
+        {"nummer": 6, "tittel": "Beredskap, brann og førstehjelp", "formaal": "Være forberedt på alvorlige hendelser",
          "stikkord": ["nødnumre", "evakuering", "brannøvelse"], "hjemler": ["AML § 4-4"]},
-        {"nummer": 6, "tittel": "Revisjon og forbedring", "formaal": "Årlig gjennomgang av HMS-systemet",
+        {"nummer": 7, "tittel": "Arbeidsreglement", "formaal": "Fastsette felles kjøreregler",
+         "stikkord": ["innhold", "drøfting med tillitsvalgte", "tilgjengelighet"],
+         "hjemler": ["AML § 14-16"]},
+        {"nummer": 8, "tittel": "Revisjon og forbedring", "formaal": "Årlig gjennomgang av HMS-systemet",
          "stikkord": ["årlig gjennomgang", "revisjon", "forbedringstiltak"],
          "hjemler": ["IK-forskriften § 5"]},
     ]
@@ -1061,15 +1293,30 @@ def _mock_donna(company_info: dict) -> str:
     return "```json\n" + json.dumps(plan, ensure_ascii=False, indent=2) + "\n```"
 
 
+def _frist(maaneder_fram: int) -> str:
+    """Dato et gitt antall måneder fram i tid, alltid etter dagens dato.
+
+    Fristene i mock-dataene var bundet til inneværende år, så etter 30. juni
+    genererte mocken en frist i fortiden — og feilet sin egen faktaport. Det er
+    samme feil som den ekte leveransen hadde: vernerunde med frist 30.06 i et
+    dokument datert 31.08.
+    """
+    n = time.localtime()
+    maaned = n.tm_mon + maaneder_fram
+    aar = n.tm_year + (maaned - 1) // 12
+    maaned = (maaned - 1) % 12 + 1
+    dag = 28 if maaned == 2 else (30 if maaned in (4, 6, 9, 11) else 31)
+    return f"{dag:02d}.{maaned:02d}.{aar}"
+
+
 def _mock_hms_maal_tabell() -> str:
-    aar = time.strftime("%Y")
     return f"""**HMS-mål:**
 
 | Mål | Måltall | Frist | Ansvarlig |
 |---|---|---|---|
-| Redusere sykefraværet | Under 4,0 % | 31.12.{aar} | Daglig leder |
-| Gjennomføre vernerunder | 2 per år | 30.06.{aar} og 31.12.{aar} | Verneombud |
-| Lukke meldte avvik | 100 % innen 14 dager | Løpende, vurderes 31.12.{aar} | Daglig leder |
+| Redusere sykefraværet | Under 4,0 % | {_frist(12)} | Daglig leder |
+| Gjennomføre vernerunder | 2 per år | {_frist(6)} og {_frist(12)} | Verneombud |
+| Lukke meldte avvik | 100 % innen 14 dager | Løpende, vurderes {_frist(12)} | Daglig leder |
 
 """
 
@@ -1148,7 +1395,54 @@ def run_harvey(session_id: str, company_info: dict) -> dict:
         raise
 
 
-def _plan_ok(plan: dict, company_info: dict) -> bool:
+# Emner Louis krever eget kapittel for. Mangler kapittelet i Donnas plan, kan
+# Mike aldri rette det: reparasjonsrunden skriver om kapitler som finnes, den
+# oppretter ingen nye. Da underkjenner Louis i det uendelige og leveransen er
+# tapt uansett hvor godt Mike skriver. Derfor stoppes det her, hos Donna, der
+# det fortsatt lar seg rette.
+_PLANKRAV = [
+    {
+        "navn": "varsling",
+        # Ingen flagg hos Harvey — utløses av at kap. 2A faktisk er kartlagt.
+        "flagg": None,
+        "i_harvey": ("2a-1", "kap. 2a", "kap 2a", "2a-6"),
+        "i_plan": ("varsl",),
+        "krav": ("et eget kapittel om varsling om kritikkverdige forhold "
+                 "(AML kap. 2A) med varslingskanal, mottaker og alternativ kanal"),
+    },
+    {
+        "navn": "arbeidsreglement",
+        # Her FINNES et flagg, og da må verdien avgjøre. Feltnavnet står i
+        # JSON-en uansett om svaret er true eller false, så et tekstsøk ville
+        # slått til på alle bedrifter — også de som ikke er omfattet.
+        "flagg": "arbeidsreglement_paakrevd",
+        "i_harvey": (),
+        "i_plan": ("arbeidsreglement", "reglement"),
+        "krav": "et eget kapittel eller avsnitt om arbeidsreglement (AML § 14-16)",
+    },
+]
+
+
+def _plan_mangler(plan: dict, harvey_data: dict) -> list[str]:
+    """Emner Harvey har kartlagt, men som ingen kapittel dekker."""
+    harvey_tekst = json.dumps(harvey_data, ensure_ascii=False).lower()
+    alle = (plan.get("hms_kapitler") or []) + (plan.get("personal_kapitler") or [])
+    plan_tekst = json.dumps(alle, ensure_ascii=False).lower()
+
+    mangler = []
+    for krav in _PLANKRAV:
+        flagg = krav.get("flagg")
+        if flagg:
+            if harvey_data.get(flagg) is not True:
+                continue  # ikke påkrevd for denne bedriften
+        elif not any(n in harvey_tekst for n in krav["i_harvey"]):
+            continue  # Harvey har ikke kartlagt dette
+        if not any(n in plan_tekst for n in krav["i_plan"]):
+            mangler.append(krav["krav"])
+    return mangler
+
+
+def _plan_ok(plan: dict, company_info: dict, harvey_data: dict | None = None) -> bool:
     kapitler = plan.get("hms_kapitler")
     if not isinstance(kapitler, list) or not kapitler:
         return False
@@ -1156,6 +1450,8 @@ def _plan_ok(plan: dict, company_info: dict) -> bool:
     if any(not isinstance(k, dict) or "tittel" not in k or "nummer" not in k for k in alle):
         return False
     if company_info.get("oensker_personalhaandbok", True) and not plan.get("personal_kapitler"):
+        return False
+    if harvey_data is not None and _plan_mangler(plan, harvey_data):
         return False
     return True
 
@@ -1177,46 +1473,115 @@ def run_donna(session_id: str, harvey_data: dict, company_info: dict) -> dict:
             else:
                 output = _stream_real(run_id, "donna", system, user_msg + feedback)
             plan = _extract_harvey_json(output)
-            if plan and _plan_ok(plan, company_info):
+            if plan and _plan_ok(plan, company_info, harvey_data):
                 _complete_run(run_id, output)
                 return plan
-            feedback = _RETRY_JSON
-        raise PipelineError("Donna leverte ikke gyldig kapittelplan etter 2 forsøk.")
+            # Skill mellom ugyldig JSON og gyldig plan med hull i dekningen —
+            # Donna kan bare rette det hun får vite hva er galt.
+            if plan:
+                mangler = _plan_mangler(plan, harvey_data)
+                feedback = (
+                    "\n\nPlanen mangler kapitler for krav Harvey har kartlagt. "
+                    "Legg til: " + "; ".join(mangler)
+                ) if mangler else _RETRY_JSON
+            else:
+                feedback = _RETRY_JSON
+        raise PipelineError(
+            "Donna leverte ikke gyldig kapittelplan etter 2 forsøk"
+            + (f" — manglet fortsatt: {'; '.join(_plan_mangler(plan, harvey_data))}"
+               if plan and _plan_mangler(plan, harvey_data) else "."))
     except Exception as e:
         _fail_run(run_id, str(e))
         raise
 
 
-def _skriv_kapittel(run_id: str, system: str, harvey_data: dict, company_info: dict,
-                    kap: dict, dok_navn: str, prev_output: str, instruks: str | None = None
-                    ) -> tuple[str, str]:
-    """Skriv ETT kapittel med Mike, med kvalitetsport og retry. Returnerer (kapitteltekst, samlet run-output)."""
-    user_msg = (
-        f"Skriv kapittel {kap['nummer']} i {dok_navn}.\n\n"
-        + _bedriftsblokk(company_info)
+def _skriv_kapittel(system: str, harvey_data: dict, company_info: dict, kap: dict,
+                    dok_navn: str, instruks: str | None = None, on_chunk=None) -> str:
+    """Skriv ETT kapittel med Mike, med kvalitetsport og retry.
+
+    Trådsikker: funksjonen eier ingen delt tilstand og skriver ikke til
+    agent_runs selv — den som kaller bestemmer hvordan framdrift lagres.
+    """
+    # Delt kontekst først: identisk for alle kapitler i samme kjøring, og
+    # dermed cachebar på tvers av alle tretten kallene.
+    felles = (
+        _bedriftsblokk(company_info)
+        + "\n\n" + _faktaregister(company_info)
         + f"\n\nHarveys lovanalyse:\n```json\n{json.dumps(harvey_data, ensure_ascii=False)}\n```"
-        + f"\n\nKapittelspesifikasjon fra Donna:\n```json\n{json.dumps(kap, ensure_ascii=False, indent=2)}\n```"
+    )
+    variabelt = (
+        f"Skriv kapittel {kap['nummer']} i {dok_navn}.\n\n"
+        f"Kapittelspesifikasjon fra Donna:\n```json\n"
+        f"{json.dumps(kap, ensure_ascii=False, indent=2)}\n```"
     )
     if instruks:
-        user_msg += f"\n\nKVALITETSFUNN fra Louis som MÅ rettes i denne versjonen:\n{instruks}"
+        variabelt += f"\n\nKVALITETSFUNN fra Louis som MÅ rettes i denne versjonen:\n{instruks}"
 
     problemer: list[str] = []
     for _ in range(2):
         if MOCK_MODE:
             tekst = _mock_mike_kapittel(company_info, kap)
-            output = _stream_mock(run_id, tekst + "\n\n", prev=prev_output)
+            time.sleep(0.05)
         else:
-            output = _stream_real(run_id, "mike", system, user_msg, prev=prev_output)
-            tekst = output[len(prev_output):]
+            tekst = _kall_modell("mike", system, _bruker_innhold(felles, variabelt), on_chunk)
         problemer = _kapittelfeil(tekst, kap, dok_navn)
         if not problemer:
-            return tekst.strip(), output
-        user_msg += "\n\nForrige forsøk hadde disse feilene — rett dem: " + "; ".join(problemer)
-        prev_output = output
+            return tekst.strip()
+        variabelt += "\n\nForrige forsøk hadde disse feilene — rett dem: " + "; ".join(problemer)
     raise PipelineError(
         f"Kapittel «{kap['tittel']}» i {dok_navn} besto ikke kvalitetsporten etter 2 forsøk: "
         + "; ".join(problemer)
     )
+
+
+def _skriv_kapitler_parallelt(run_id: str, system: str, harvey_data: dict, company_info: dict,
+                              oppgaver: list[tuple[dict, str, str | None]]) -> list[str]:
+    """Skriv flere kapitler samtidig og returner dem i OPPGITT rekkefølge.
+
+    Rekkefølgen er poenget: hvilket kapittel som blir ferdig først varierer fra
+    kjøring til kjøring, men dokumentet skal bli identisk hver gang. Derfor
+    indekseres resultatene, aldri appendes.
+    """
+    ferdige: dict[int, str] = {}
+    underveis: dict[int, str] = {}
+    laas = threading.Lock()
+
+    def lagre_framdrift():
+        # Kalles under lås. Viser ferdige kapitler pluss det som skrives nå,
+        # slik at UI-et har noe å vise mens seks kall pågår samtidig.
+        deler = []
+        for i in range(len(oppgaver)):
+            if i in ferdige:
+                deler.append(ferdige[i])
+            elif i in underveis:
+                deler.append(underveis[i])
+        _update_run(run_id, "\n\n".join(deler))
+
+    def arbeid(i: int, kap: dict, dok_navn: str, instruks: str | None) -> str:
+        sist = [0]
+
+        def on_chunk(tekst: str):
+            if len(tekst) - sist[0] >= 2000:
+                sist[0] = len(tekst)
+                with laas:
+                    underveis[i] = tekst
+                    lagre_framdrift()
+
+        tekst = _skriv_kapittel(system, harvey_data, company_info, kap, dok_navn,
+                                instruks=instruks, on_chunk=on_chunk)
+        with laas:
+            ferdige[i] = tekst
+            underveis.pop(i, None)
+            lagre_framdrift()
+        return tekst
+
+    with ThreadPoolExecutor(max_workers=MIKE_PARALLELLE) as ex:
+        futures = {ex.submit(arbeid, i, kap, dn, ins): i
+                   for i, (kap, dn, ins) in enumerate(oppgaver)}
+        for f in as_completed(futures):
+            f.result()  # første feil kastes videre og stopper leveransen
+
+    return [ferdige[i] for i in range(len(oppgaver))]
 
 
 def run_mike(session_id: str, plan: dict, harvey_data: dict, company_info: dict
@@ -1224,16 +1589,17 @@ def run_mike(session_id: str, plan: dict, harvey_data: dict, company_info: dict
     run_id = _create_run(session_id, "mike")
     try:
         system = _read_prompt("mike_system.md")
-        prev = ""
-        hms_kap: list[tuple[dict, str]] = []
-        personal_kap: list[tuple[dict, str]] = []
-        for kap in plan["hms_kapitler"]:
-            tekst, prev = _skriv_kapittel(run_id, system, harvey_data, company_info, kap, "HMS-håndboken", prev)
-            hms_kap.append((kap, tekst))
-        for kap in plan.get("personal_kapitler") or []:
-            tekst, prev = _skriv_kapittel(run_id, system, harvey_data, company_info, kap, "personalhåndboken", prev)
-            personal_kap.append((kap, tekst))
-        _complete_run(run_id, prev)
+        hms_spec = [(kap, "HMS-håndboken", None) for kap in plan["hms_kapitler"]]
+        personal_spec = [(kap, "personalhåndboken", None)
+                         for kap in (plan.get("personal_kapitler") or [])]
+        alle = hms_spec + personal_spec
+
+        tekster = _skriv_kapitler_parallelt(run_id, system, harvey_data, company_info, alle)
+
+        skille = len(hms_spec)
+        hms_kap = [(kap, tekst) for (kap, _, _), tekst in zip(hms_spec, tekster[:skille])]
+        personal_kap = [(kap, tekst) for (kap, _, _), tekst in zip(personal_spec, tekster[skille:])]
+        _complete_run(run_id, "\n\n".join(tekster))
         return hms_kap, personal_kap
     except Exception as e:
         _fail_run(run_id, str(e))
@@ -1314,12 +1680,33 @@ def run_louis(session_id: str, doc: str, dok_navn: str, harvey_data: dict, compa
         raise
 
 
+def _blokkerende(rapport: dict) -> list[dict]:
+    """Funn som skal stoppe en leveranse.
+
+    Louis er instruert til å være pedantisk og «godkjenner ALDRI et dokument
+    med mangler». Det er riktig for en kontrollør, men gjør ham ubrukelig som
+    port: en merknad om en upresis formulering stoppet leveransen like hardt
+    som en lovfeil, og ingen håndbok kom noen gang forbi ham.
+
+    KRITISK (lovfeil) og HØY (manglende påkrevd innhold) blokkerer. MIDDELS
+    forsøkes rettet i reparasjonsrunden, men hindrer ikke leveranse — et
+    dokument med en klønete formulering er fortsatt et gyldig HMS-system;
+    et med feil paragrafhenvisning er det ikke.
+    """
+    blokkerende = []
+    for funn in rapport.get("funn", []) or []:
+        alvor = str(funn.get("alvor", "")).upper().replace("Ø", "O").strip()
+        if alvor in ("KRITISK", "HOY", "CRITICAL", "HIGH"):
+            blokkerende.append(funn)
+    return blokkerende
+
+
 def _louis_runde(session_id: str, doc: str, kapitler: list[tuple[dict, str]], dok_navn: str,
                  dok_tittel: str, harvey_data: dict, company_info: dict, dok_type: str
                  ) -> tuple[str, list[tuple[dict, str]]]:
     """Louis-QA med maks én reparasjonsrunde via Mike. Returnerer (dokument, kapitler)."""
     rapport = run_louis(session_id, doc, dok_navn, harvey_data, company_info)
-    if rapport.get("godkjent"):
+    if rapport.get("godkjent") or not (rapport.get("funn") or []):
         return doc, kapitler
 
     per_kapittel: dict[str, list[str]] = {}
@@ -1330,23 +1717,43 @@ def _louis_runde(session_id: str, doc: str, kapitler: list[tuple[dict, str]], do
 
     system = _read_prompt("mike_system.md")
     run_id = _create_run(session_id, "mike")
-    prev = ""
-    nye: list[tuple[dict, str]] = []
+    generelle = per_kapittel.get("GENERELT", [])
+
+    # Bygg oppgavelista først: kapitler uten funn skrives ikke om i det hele
+    # tatt, og de som skal skrives om, gjøres parallelt — akkurat som i
+    # førsterunden. En underkjenning fra Louis skal ikke doble kjøretiden.
+    oppgaver: list[tuple[dict, str, str | None]] = []
+    uendret: dict[int, str] = {}
+    for i, (kap, tekst) in enumerate(kapitler):
+        ref = f"{kap['nummer']}. {kap['tittel']}"
+        instrukser = list(generelle)
+        for nokkel, ins in per_kapittel.items():
+            if nokkel != "GENERELT" and (kap["tittel"] in nokkel or nokkel in ref):
+                instrukser.extend(ins)
+        if instrukser:
+            oppgaver.append((kap, dok_navn, "\n".join(f"- {i}" for i in instrukser)))
+        else:
+            uendret[i] = tekst
+
     try:
-        generelle = per_kapittel.get("GENERELT", [])
-        for kap, tekst in kapitler:
-            ref = f"{kap['nummer']}. {kap['tittel']}"
-            instrukser = list(generelle)
-            for nokkel, ins in per_kapittel.items():
-                if nokkel != "GENERELT" and (kap["tittel"] in nokkel or nokkel in ref):
-                    instrukser.extend(ins)
-            if instrukser:
-                tekst, prev = _skriv_kapittel(
-                    run_id, system, harvey_data, company_info, kap, dok_navn, prev,
-                    instruks="\n".join(f"- {i}" for i in instrukser),
-                )
-            nye.append((kap, tekst))
-        _complete_run(run_id, prev or "(reparasjonsrunde: ingen kapitler å skrive om)")
+        if oppgaver:
+            nye_tekster = _skriv_kapitler_parallelt(
+                run_id, system, harvey_data, company_info, oppgaver)
+        else:
+            nye_tekster = []
+
+        # Sy sammen igjen i original kapittelrekkefølge
+        nye: list[tuple[dict, str]] = []
+        neste = 0
+        for i, (kap, tekst) in enumerate(kapitler):
+            if i in uendret:
+                nye.append((kap, uendret[i]))
+            else:
+                nye.append((kap, nye_tekster[neste]))
+                neste += 1
+
+        _complete_run(run_id, "\n\n".join(t for _, t in nye)
+                      if oppgaver else "(reparasjonsrunde: ingen kapitler å skrive om)")
     except Exception as e:
         _fail_run(run_id, str(e))
         raise
@@ -1357,9 +1764,20 @@ def _louis_runde(session_id: str, doc: str, kapitler: list[tuple[dict, str]], do
         raise PipelineError(f"{dok_navn} besto ikke kvalitetsporten etter reparasjon: " + "; ".join(problemer))
 
     rapport2 = run_louis(session_id, doc, dok_navn, harvey_data, company_info)
-    if not rapport2.get("godkjent"):
-        gjenstaaende = "; ".join(f.get("problem", "") for f in rapport2.get("funn", []))
-        raise PipelineError(f"Louis godkjente ikke {dok_navn} etter reparasjonsrunden: {gjenstaaende}")
+    alvorlige = _blokkerende(rapport2)
+    if alvorlige:
+        gjenstaaende = "; ".join(
+            f"[{f.get('alvor')}] {f.get('kapittel', '')}: {f.get('problem', '')}"
+            for f in alvorlige)
+        raise PipelineError(
+            f"Louis fant fortsatt alvorlige mangler i {dok_navn} etter "
+            f"reparasjonsrunden: {gjenstaaende}")
+
+    resterende = [f for f in (rapport2.get("funn") or []) if f not in alvorlige]
+    if resterende:
+        print(f"[louis] {dok_navn} leveres med {len(resterende)} merknad(er) av "
+              f"lavere alvor: "
+              + "; ".join(f.get("problem", "")[:90] for f in resterende), flush=True)
     return doc, nye
 
 
@@ -1419,14 +1837,16 @@ def run(session_id: str) -> None:
 
         # 4. Deterministisk sammenstilling + kvalitetsport
         hms_doc = _sett_sammen(company_info, "HMS-HÅNDBOK", hms_kap, "hms")
-        problemer = _kvalitetsfeil(hms_doc, [k for k, _ in hms_kap], "HMS-håndboken")
+        problemer = (_kvalitetsfeil(hms_doc, [k for k, _ in hms_kap], "HMS-håndboken")
+                     + _faktafeil(hms_doc, company_info))
         if problemer:
             raise PipelineError("HMS-håndboken besto ikke kvalitetsporten: " + "; ".join(problemer))
 
         personal_doc = ""
         if personal_kap:
             personal_doc = _sett_sammen(company_info, "PERSONALHÅNDBOK", personal_kap, "personal")
-            problemer = _kvalitetsfeil(personal_doc, [k for k, _ in personal_kap], "personalhåndboken")
+            problemer = (_kvalitetsfeil(personal_doc, [k for k, _ in personal_kap], "personalhåndboken")
+                         + _faktafeil(personal_doc, company_info))
             if problemer:
                 raise PipelineError("Personalhåndboken besto ikke kvalitetsporten: " + "; ".join(problemer))
 
