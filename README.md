@@ -3,6 +3,10 @@
 Automatisk generering av HMS-håndbøker og personalhåndbøker for norske bedrifter,
 med kvalitetsporter som garanterer komplette dokumenter — eller ingen leveranse.
 
+> Denne filen er oversikten og kom-i-gang-veiledningen.
+> **[`ARKITEKTUR.md`](ARKITEKTUR.md)** forklarer hvordan systemet henger sammen
+> og hvorfor designvalgene er som de er.
+
 ## Oversikt
 
 ```
@@ -83,19 +87,27 @@ FOR-2011-12-06-1355 § 13-1. `NULL` = ikke verifisert, og Harvey skal da flagge
 kravet for manuell vurdering framfor å anta at BHT er unødvendig. Lista lot seg
 ikke hente maskinelt fra Lovdata, så kun bygg/anlegg, helse og renhold er satt.
 
-**Dekning:** 17 NACE-koder er seedet. Er koden ikke dekket, svarer motoren
+**Dekning:** 17 gjeldende NACE-koder. Er koden ikke dekket, svarer motoren
 `dekning: "ingen"` med tom hjemmelsliste, og promptblokken ber eksplisitt Harvey
 om å ikke dikte opp bransjeforskrifter.
+
+**Verifisert vs. ukontrollert.** Hjemler med `verifisert_dato` gis til Harvey som
+«bruk NØYAKTIG disse henvisningene». Hjemler uten dato sier i stedet at temaet
+SKAL dekkes, men at paragrafnummer ikke skal siteres og frekvenser eller
+terskelverdier ikke skal gjettes. Skillet finnes fordi modellen dikter der
+dataene tier — se `ARKITEKTUR.md` for de dokumenterte eksemplene.
 
 > **To feil funnet ved verifisering mot Lovdata (15.08.2026):** Harvey-prompten
 > siterte BHT-kravet som `FOR-2009-01-01-70` (finnes ikke — riktig er
 > FOR-2011-12-06-1355 § 13-1) og kjøre- og hviletid som `FOR-2007-02-02-190`
 > (riktig er FOR-2007-07-02-877). Begge er rettet.
 
-> **Rydding som gjenstår:** `harvey_nace_krav` inneholder 28 eldre rader på
-> formen `F41`, `Q86`, `N81`. Brønnøysund oppgir NACE etter SN2007 (`41.200`,
-> `86.211`), så de radene kan aldri treffes av et oppslag. De gir dubletter i
-> bransjevelgeren og bør slettes eller migreres.
+> **Ryddet 31.08.2026 (`migrations/003`):** `harvey_nace_krav` bar 28 eldre rader
+> på formen `F41`, `Q86`, `N81`. Brønnøysund oppgir NACE etter SN2007 (`41.200`,
+> `86.211`), så de kunne aldri treffes av et oppslag — og de hadde ingen
+> forskriftshjemler, så en håndbok generert på dem fikk ingen bransjetilpasning
+> i det hele tatt. Kolonnen `gjeldende` skjuler dem fra bransjevelgeren; radene
+> beholdes fordi tidligere sesjoner refererer til dem via fremmednøkkel.
 
 Tester: `python tests/test_nace_kravmotor.py`. Brreg-laget stubbes, så
 validering og feilhåndtering kjører uten nett; kjedetestene krever
@@ -125,9 +137,17 @@ Portene er kode, ikke modellvurderinger — de kan ikke overtales bort.
 **Per kapittel** (alt Mike skriver): riktig overskrift, minstelengde,
 ingen gjenglemte plassholdere.
 
+**Per kapittelplan** (Donna): emner Harvey har kartlagt må ha et kapittel.
+I dag varsling etter AML kap. 2A, og arbeidsreglement når det er påkrevd.
+Porten ligger hos Donna framfor hos Louis fordi reparasjonsrunden kan omskrive
+kapitler som finnes, men ikke opprette nye — mangler kapittelet i planen, er
+leveransen tapt uansett hvor godt Mike skriver.
+
 **Per sammensatt dokument** (både HMS- og personalhåndbok):
 - Alle planlagte kapitler finnes i dokumentet
 - Ingen plassholdere noe sted
+- **Faktakonsistens** — bedriftsnavnet skrevet med samme bokstavbruk overalt,
+  og ingen frist som ligger før dokumentdatoen
 
 **Kun HMS-håndboken:**
 - **Målbare HMS-mål** — minst 3 mål i tabell (Mål | Måltall | Frist | Ansvarlig),
@@ -139,6 +159,10 @@ ingen gjenglemte plassholdere.
 **Hjemmelskontroll:** koden finner §-referanser i dokumentet som ikke kan spores
 til Harveys lovliste eller kjent-listen, og sender dem inn i Louis' kontroll som
 flagg — Louis avgjør om de er hallusinerte eller legitime.
+
+**Louis' alvorsgradering:** `KRITISK` (lovfeil) og `HØY` (manglende påkrevd
+innhold) stopper leveransen. `MIDDELS` forsøkes rettet, men blokkerer ikke — en
+port som krevde tom funnliste gjorde Louis ute av stand til å godkjenne noe.
 
 **Hard feil:** `stop_reason == "max_tokens"` fra modellen avbryter kjøringen.
 Et avkuttet compliance-dokument er verre enn ingen leveranse.
@@ -177,14 +201,19 @@ Et avkuttet compliance-dokument er verre enn ingen leveranse.
 
 ```
 hms-generator/
+├── ARKITEKTUR.md      # Hvordan systemet henger sammen og hvorfor
 ├── CLAUDE.md          # Prosjektguide for Claude
 ├── README.md          # Denne filen
 ├── AGENTREVIEW.md     # Agent-/kvalitetsreview
 ├── server.py          # FastAPI-server
 ├── pipeline.py        # Agent-pipeline, kvalitetsporter, Excel + Word-skjemaer
 ├── eksport.py         # Eksportlag: JSON/DOCX/PDF, HMS-mål- og IK-kontroll
+├── nace_krav.py       # NACE-oppslag → <bransjekrav> til Harvey
+├── brreg.py           # Enhetsregisteret med MOD11-validering
 ├── agents/            # Agentdefinisjoner (Harvey, Donna, Mike, Louis, Jessica, Rex)
 ├── prompts/           # System-prompter
+├── migrations/        # 001 skjema · 002 seed · 003 konsolidering + elektro
+├── tests/             # Kravmotor + ende-til-ende
 ├── ui/                # Frontend (index.html + app.js)
 └── output/            # Genererte håndbøker (ignoreres av git)
 ```
