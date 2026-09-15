@@ -15,6 +15,7 @@ from supabase import create_client
 
 import eksport
 import nace_krav
+import lovregister
 
 load_dotenv()
 
@@ -935,6 +936,7 @@ def _kapittelfeil(tekst: str, kap: dict, dok_navn: str = "",
         feil.extend(eksport.hms_maal_feil(tekst))
     if company_info:
         feil.extend(_faktafeil(tekst, company_info))
+    feil.extend(lovregister.hjemmelsfeil(tekst, _hent_lovregister()))
     return feil
 
 
@@ -979,6 +981,7 @@ def _faktafeil(doc: str, company_info: dict) -> list[str]:
 
 
 def _kvalitetsfeil(doc: str, kapitler: list[dict], dok_navn: str = "") -> list[str]:
+    """Kvalitetsport på det sammensatte dokumentet."""
     """Kvalitetsport for sammensatt dokument."""
     feil = []
     tmp = doc
@@ -998,6 +1001,21 @@ def _kvalitetsfeil(doc: str, kapitler: list[dict], dok_navn: str = "") -> list[s
 
 # ─── Prompt-bygging ──────────────────────────────────────────────────────────
 
+
+
+_lovregister_cache: dict | None = None
+
+
+def _hent_lovregister() -> dict:
+    """Lovregisteret, hentet én gang per prosess.
+
+    Det endres bare når noen kjører en migrasjon, så ett oppslag holder — og
+    tretten parallelle kapittelkall skal ikke slå opp det samme tretten ganger.
+    """
+    global _lovregister_cache
+    if _lovregister_cache is None:
+        _lovregister_cache = lovregister.hent_register(_supabase)
+    return _lovregister_cache
 
 
 def _faktaregister(company_info: dict) -> str:
@@ -1513,9 +1531,11 @@ def _skriv_kapittel(system: str, harvey_data: dict, company_info: dict, kap: dic
     """
     # Delt kontekst først: identisk for alle kapitler i samme kjøring, og
     # dermed cachebar på tvers av alle tretten kallene.
+    lovblokk = lovregister.til_promptblokk(_hent_lovregister())
     felles = (
         _bedriftsblokk(company_info)
         + "\n\n" + _faktaregister(company_info)
+        + (f"\n\n{lovblokk}" if lovblokk else "")
         + f"\n\nHarveys lovanalyse:\n```json\n{json.dumps(harvey_data, ensure_ascii=False)}\n```"
     )
     variabelt = (
@@ -1847,7 +1867,8 @@ def run(session_id: str) -> None:
         # 4. Deterministisk sammenstilling + kvalitetsport
         hms_doc = _sett_sammen(company_info, "HMS-HÅNDBOK", hms_kap, "hms")
         problemer = (_kvalitetsfeil(hms_doc, [k for k, _ in hms_kap], "HMS-håndboken")
-                     + _faktafeil(hms_doc, company_info))
+                     + _faktafeil(hms_doc, company_info)
+                     + lovregister.hjemmelsfeil(hms_doc, _hent_lovregister()))
         if problemer:
             raise PipelineError("HMS-håndboken besto ikke kvalitetsporten: " + "; ".join(problemer))
 
@@ -1855,7 +1876,8 @@ def run(session_id: str) -> None:
         if personal_kap:
             personal_doc = _sett_sammen(company_info, "PERSONALHÅNDBOK", personal_kap, "personal")
             problemer = (_kvalitetsfeil(personal_doc, [k for k, _ in personal_kap], "personalhåndboken")
-                         + _faktafeil(personal_doc, company_info))
+                         + _faktafeil(personal_doc, company_info)
+                         + lovregister.hjemmelsfeil(personal_doc, _hent_lovregister()))
             if problemer:
                 raise PipelineError("Personalhåndboken besto ikke kvalitetsporten: " + "; ".join(problemer))
 

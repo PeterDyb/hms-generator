@@ -35,6 +35,7 @@ befolket. Dette er ikke en detalj — det er hovedinnsikten i hele prosjektet.
 | `handbooks` | Ferdige håndbøker i Markdown |
 | `harvey_nace_krav` | Én rad per bransje: risikonivå, BHT-plikt, dokumentkrav |
 | `nace_forskriftskrav` | **Én rad per paragraf**, med `kilde_url` og `verifisert_dato` |
+| `lovhjemler` | Paragrafregister per lov — hele kapitler, kontrollert mot Lovdata |
 
 ### Hvorfor `verifisert_dato` er den viktigste kolonnen
 
@@ -164,6 +165,21 @@ Merk at flaggbaserte krav ser på **verdien**, ikke om feltnavnet finnes i JSON-
 - **IK-dekning**: hvert av kravene nr. 4–8 har et *eget* kapittel, med treff i
   både overskrift og innhold — så generell standardtekst ikke kan «dekke» et krav
   Mike aldri skrev om
+
+### Hjemmelskontroll — `lovregister.hjemmelsfeil`
+Slår siterte AML-paragrafer opp i `lovhjemler` og melder to ting, begge som
+oppslag uten skjønn: en paragraf som er **opphevet**, og en paragraf som ikke
+finnes i et kapittel vi har registrert **komplett**.
+
+Bare paragrafer eksplisitt merket som AML kontrolleres — dokumentene siterer
+også ferieloven og folketrygdloven, og «§ 5-2» alene kan tilhøre hvilken som
+helst av dem. Kapitler som ikke er registrert, sies det ingenting om.
+
+Porten finnes fordi kontrollen tidligere lå hos Louis, som resonnerer om
+paragrafnumre fra hukommelsen uten kilde. Han ba en gang Mike endre
+meldeplikten til Arbeidstilsynet fra § 5-2 til § 5-1 — fra riktig til galt — og
+underkjente ham i neste runde for nettopp det. En kontroll som er like usikker
+som det den kontrollerer, gjør skade når den tar feil.
 
 ### Faktakonsistens — `_faktafeil`
 - Bedriftsnavnet skrevet med samme bokstavbruk overalt
@@ -352,10 +368,11 @@ hms-generator/
 ├── pipeline.py        # agentene, portene, parallellisering, Excel/Word-skjemaer
 ├── eksport.py         # JSON/DOCX/PDF, HMS-målkontroll, IK-dekning, innføringsplan
 ├── nace_krav.py       # NACE-oppslag → <bransjekrav> til Harvey
+├── lovregister.py     # paragrafoppslag → <lovregister> til Mike + hjemmelsport
 ├── brreg.py           # Enhetsregisteret, MOD11-validering, norske feilmeldinger
 ├── agents/            # hvem agentene er
 ├── prompts/           # hva som sendes til modellen
-├── migrations/        # 001 skjema · 002 seed · 003 konsolidering + elektro
+├── migrations/        # 001 skjema · 002 seed · 003 elektro · 004 lovhjemler
 ├── tests/             # kravmotor + ende-til-ende
 ├── ui/                # landing.html (salg) · index.html + app.js (generator)
 └── output/            # genererte filer (ignorert av git)

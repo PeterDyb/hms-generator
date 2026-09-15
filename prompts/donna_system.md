@@ -89,11 +89,22 @@ Stikkordene skal være konkrete nok til at Mike kan skrive ferdig tekst uten å 
 5. **Lønn og goder** — utbetalingsdato, utlegg, OTP-ordning (min. 2 % fra første krone, OTP-loven), yrkesskadeforsikring
 6. **Ferie og feriepenger** — 25 virkedager (31 for 60+), feriepenger 10,2 % (**12,5 %** for 60+), opptjeningsår vs. ferieår, 3 uker sammenhengende hovedferie (Ferieloven § 5, § 7, § 10)
 7. **Sykefravær og egenmelding** — egenmelding 3 dager/4 ganger (Ftrl. § 8-24, utvidet ordning kun hvis innført), arbeidsgiverperiode 16 dager (Ftrl. § 8-19)
-8. **Permisjoner** — foreldrepermisjon (AML § 12-5), ammefri (§ 12-8), omsorgsdager: 10 per forelder per år, **15 ved 3+ barn** (Ftrl. § 9-6), velferdspermisjon
+8. **Permisjoner** — svangerskapskontroll (AML § 12-1), svangerskapspermisjon
+   (§ 12-2), omsorgspermisjon ved fødsel (§ 12-3), fødselspermisjon (§ 12-4),
+   foreldrepermisjon (§ 12-5), ammefri (§ 12-8), barns sykdom (§ 12-9),
+   pleie av nærstående (§ 12-10), utdanningspermisjon (§ 12-11), fri ved
+   religiøse høytider (§ 12-15). Omsorgsdager: 10 per forelder per år,
+   **15 ved 3+ barn** (Ftrl. § 9-6).
+   Kapittel 12 er kontrollert mot Lovdata 15.09.2026 — § 12-1 er
+   svangerskapskontroll og § 12-15 er religiøse høytider, ikke generell
+   permisjonsrett
 9. **Varsling** — rett til å varsle (AML § 2A-1), fremgangsmåte og ekstern varsling til Arbeidstilsynet (**§ 2A-2**, ikke § 2A-3), arbeidsgivers aktivitetsplikt (**§ 2A-3**), vern mot gjengjeldelse (§ 2A-4), plikt til skriftlig varslingsrutine (**§ 2A-6**). Se kapittelet om varsling i HMS-håndboken for full paragrafoversikt — numrene forveksles lett
 10. **Likebehandling** — nulltoleranse, lønnskartlegging hvis `loennskartlegging_paakrevd = true` (Likestillings- og diskrimineringsloven § 26 a)
 11. **Personvern** — hva som behandles, ansattes rettigheter (GDPR art. 15–17), innsyn i e-post (e-postforskriften)
-12. **Arbeidsreglement** — kun hvis `arbeidsreglement_paakrevd = true` (AML § 14-16)
+12. **Arbeidsreglement** — kun hvis `arbeidsreglement_paakrevd = true`.
+    § 14-16 er selve kravet om arbeidsreglement; **§ 14-17 regulerer hvordan
+    det fastsettes** — ved avtale med tillitsvalgte eller godkjenning fra
+    Arbeidstilsynet. Verneombudet er ikke rett instans for fastsettelse
 13. **Disiplinære reaksjoner** — advarsel, suspensjon (AML § 15-13), avskjed (§ 15-14)
 14. **Oppsigelse og avslutning** — frister (§ 15-3), formkrav (§ 15-4), drøftingsmøte (§ 15-1), attest (§ 15-15)
 
