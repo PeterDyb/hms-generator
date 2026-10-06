@@ -8,17 +8,19 @@ lovfeil eller et manglende lovpålagt kapittel.
 ## Det du kontrollerer
 
 ### IK-forskriften § 5 (kun HMS-håndbok)
-Alle fem punkter skal være dekket: (a) mål for HMS-arbeidet, (b) organisering
-og lovoversikt, (c) kartlegging og risikovurdering, (d) rutiner for avvik og
-tiltak, (e) systematisk revisjon.
+Alle fem dokumentasjonskravene i § 5 andre ledd nr. 4–8 skal være dekket:
+nr. 4 mål for HMS-arbeidet, nr. 5 organisering og ansvarsfordeling, nr. 6
+kartlegging og risikovurdering med planer og tiltak, nr. 7 rutiner for å
+avdekke, rette opp og forebygge overtredelser, nr. 8 systematisk overvåking og
+gjennomgang. Punktene er NUMMERERT — en henvisning til «§ 5 bokstav c» er feil.
 
 ### Konkrete tall (2024/2025-regler) — feil her er alltid et funn
 - Verneombud fra **5** ansatte (AML § 6-1) — ikke 10
 - AMU fra **30** ansatte (AML § 7-1) — ikke 50
-- Feriepenger 10,2 % — **12,5 %** for 60+ (ikke 12 %)
+- Feriepenger 10,2 % — **12,5 %** for 60+ (ikke 12 %); tillegget gjelder grunnlag opp til 6G
 - Ferie 25 virkedager (31 for 60+)
 - OTP minst 2 % **fra første krone** (ingen 1G-fradrag, ingen 20 %-grense)
-- Egenmelding 3 dager / 4 ganger per 12 mnd — utvidet ordning kun hvis bedriften har innført den
+- Egenmelding inntil 3 kalenderdager om gangen (Ftrl. § 8-24) — utvidet ordning kun hvis bedriften har innført den
 - Omsorgsdager 10 per forelder, **15** ved 3+ barn
 - Oppfølgingsplan 4 uker, dialogmøte 1 innen 7 uker
 - Arbeidsgiverperiode sykepenger 16 dager

@@ -690,21 +690,21 @@ def generate_word_forms(company_info: dict, session_id: str) -> list[Path]:
     parties.rows[1].cells[1].text = navn
 
     for heading, content in [
-        ("§ 1  Arbeidssted (AML § 14-6 a)", "Arbeidstakers faste arbeidssted er: _______________________________________________"),
-        ("§ 2  Stillingstittel og arbeidsoppgaver (AML § 14-6 b)", "Stillingstittel: _______________________________________________\n\nArbeidsoppgaver: _______________________________________________"),
-        ("§ 3  Tiltredelsesdato (AML § 14-6 c)", "Tiltredelse: _______________ (dd.mm.åååå)"),
-        ("§ 4  Prøvetid (AML § 14-6 d)", "☐ Ingen prøvetid\n☐ Prøvetid: ___ måneder (maks 6 måneder). Gjensidig oppsigelsesfrist i prøvetid: 14 dager."),
-        ("§ 5  Stillingsprosent (AML § 14-6 e)", "☐ Fast stilling 100 %\n☐ Deltid: _____ %\n\nForventet ukentlig arbeidstid: _____ timer"),
-        ("§ 6  Arbeidstid (AML § 14-6 j)", "Ordinær arbeidstid: _____ til _____ (kl.), _____ dager per uke.\nKveld / helg / skiftordning: _______________________________________________"),
-        ("§ 7  Lønn og lønnsregulering (AML § 14-6 i)", "Månedslønn: kr _______________\nUtbetalingsdag: den ___ i måneden.\nNeste lønnsregulering: _______________________________________________"),
-        ("§ 8  Ferie og feriepenger (AML § 14-6 k)", "Ferie i henhold til Ferieloven: 25 virkedager (31 virkedager for ansatte 60+).\nFeriepenger: 10,2 % av feriepengegrunnlaget (12,5 % for 60+)."),
-        ("§ 9  Pensjon og forsikring (AML § 14-6 l)", f"Obligatorisk tjenestepensjon (OTP-loven): _____ % av lønn fra første krone (opp til 12G).\nYrkesskadeforsikring: Ja — alle ansatte er dekket i henhold til Yrkesskadeforsikringsloven."),
-        ("§ 10  Oppsigelsesfrister (AML § 14-6 m)", "Oppsigelsesfrist følger Arbeidsmiljøloven § 15-3.\nUnder 5 år: 1 mnd | 5–9 år: 2 mnd | 10+ år: 3 mnd (lengre for eldre arbeidstakere)."),
-        ("§ 11  Tariffavtale (AML § 14-6 n)", "☐ Bedriften er bundet av tariffavtale: _______________________________________________\n☐ Ingen tariffavtale"),
-        ("§ 12  Opplysninger om pauser og hvilepauser", "Pause: rett til minst én pause ved arbeidstid over 5,5 timer; minst 30 minutter samlet ved arbeidsdag på 8 timer eller mer.\nDaglig hviletid: minst 11 timer mellom arbeidsøkter."),
-        ("§ 13  Fravær betalt av arbeidsgiver (AML § 14-6, 2024)", "Rett til fravær betalt av arbeidsgiver (f.eks. egenmelding, omsorgsdager, velferdspermisjon): se personalhåndboken."),
-        ("§ 14  Kompetanseutvikling (AML § 14-6, 2024)", "Rett til kompetanseutvikling som arbeidsgiver tilbyr: _______________________________________________"),
-        ("§ 15  Sosiale sikringsordninger (AML § 14-6, 2024)", "Ytelser til sosial sikring som arbeidsgiver betaler: obligatorisk tjenestepensjon (OTP) og yrkesskadeforsikring, jf. § 9."),
+        ("§ 1  Arbeidssted (AML § 14-6 første ledd bokstav b)", "Arbeidstakers faste arbeidssted er: _______________________________________________"),
+        ("§ 2  Stillingstittel og arbeidsoppgaver (AML § 14-6 første ledd bokstav c)", "Stillingstittel: _______________________________________________\n\nArbeidsoppgaver: _______________________________________________"),
+        ("§ 3  Tiltredelsesdato (AML § 14-6 første ledd bokstav d)", "Tiltredelse: _______________ (dd.mm.åååå)"),
+        ("§ 4  Prøvetid (AML § 14-6 første ledd bokstav f)", "☐ Ingen prøvetid\n☐ Prøvetid: ___ måneder (maks 6 måneder). Gjensidig oppsigelsesfrist i prøvetid: 14 dager."),
+        ("§ 5  Ansettelsesform og stillingsprosent (AML § 14-6 første ledd bokstav e og j)", "☐ Fast stilling\n☐ Midlertidig til _______________, grunnlag (jf. AML § 14-9): _______________\n\nStillingsprosent: _____ %   Forventet ukentlig arbeidstid: _____ timer"),
+        ("§ 6  Arbeidstid og overtid (AML § 14-6 første ledd bokstav j, l og m)", "Ordinær arbeidstid: _____ til _____ (kl.), _____ dager per uke.\nKveld / helg / skiftordning: _______________________________________________\nArbeid utover avtalt arbeidstid og betaling for det: _______________________________________________"),
+        ("§ 7  Lønn og lønnsregulering (AML § 14-6 første ledd bokstav i)", "Månedslønn: kr _______________\nUtbetalingsdag: den ___ i måneden.\nNeste lønnsregulering: _______________________________________________"),
+        ("§ 8  Ferie og feriepenger (AML § 14-6 første ledd bokstav g)", "Ferie i henhold til Ferieloven: 25 virkedager (31 virkedager for ansatte som fyller 60 år i ferieåret).\nFeriepenger: 10,2 % av feriepengegrunnlaget. For ansatte over 60 år forhøyes satsen med 2,3 prosentpoeng (til 12,5 %) for den delen av grunnlaget som ikke overstiger 6G."),
+        ("§ 9  Pensjon og forsikring (AML § 14-6 første ledd bokstav i og q)", f"Obligatorisk tjenestepensjon (OTP-loven): _____ % av lønn fra første krone (opp til 12G).\nYrkesskadeforsikring: Ja — alle ansatte er dekket i henhold til Yrkesskadeforsikringsloven."),
+        ("§ 10  Oppsigelsesfrister og fremgangsmåte (AML § 14-6 første ledd bokstav h)", "Oppsigelsesfrist følger Arbeidsmiljøloven § 15-3.\nUnder 5 år: 1 mnd | 5–9 år: 2 mnd | 10+ år: 3 mnd (lengre for eldre arbeidstakere).\nOppsigelse skal være skriftlig, jf. Arbeidsmiljøloven § 15-4."),
+        ("§ 11  Tariffavtale (AML § 14-6 første ledd bokstav n)", "☐ Bedriften er bundet av tariffavtale: _______________________________________________\n☐ Ingen tariffavtale"),
+        ("§ 12  Pauser (AML § 14-6 første ledd bokstav k)", "Pause: rett til minst én pause ved arbeidstid over 5,5 timer; minst 30 minutter samlet ved arbeidsdag på 8 timer eller mer.\nDaglig hviletid: minst 11 timer mellom arbeidsøkter."),
+        ("§ 13  Fravær betalt av arbeidsgiver (AML § 14-6 første ledd bokstav g)", "Rett til fravær betalt av arbeidsgiver (f.eks. egenmelding, omsorgsdager, velferdspermisjon): se personalhåndboken."),
+        ("§ 14  Kompetanseutvikling (AML § 14-6 første ledd bokstav p)", "Rett til kompetanseutvikling som arbeidsgiver tilbyr: _______________________________________________"),
+        ("§ 15  Sosiale sikringsordninger (AML § 14-6 første ledd bokstav q)", "Ytelser til sosial sikring som arbeidsgiver betaler: obligatorisk tjenestepensjon (OTP) og yrkesskadeforsikring, jf. § 9."),
         ("§ 16  Særskilte vilkår / tilleggsavtaler", "_______________________________________________\n_______________________________________________"),
         ("§ 17  Taushetsplikt", f"Arbeidstaker er bundet av taushetserklæring datert _______________. Se vedlagt taushetserklæring."),
     ]:
@@ -748,9 +748,9 @@ def generate_word_forms(company_info: dict, session_id: str) -> list[Path]:
     section_heading(d6, "Type egenmelding  (sett kryss)")
     p6 = d6.add_paragraph()
     for t in [
-        f"☐  Ordinær egenmelding (maks 3 sammenhengende dager, maks 4 ganger per 12 mnd)",
-        f"☐  Utvidet egenmeldingsrett — IA-bedrift (maks 24 dager)",
-        f"☐  Sykt barn (maks 10 dager per år per forelder, 15 dager ved 3+ barn)",
+        f"☐  Ordinær egenmelding (inntil 3 kalenderdager om gangen, jf. folketrygdloven § 8-24)",
+        f"☐  Utvidet egenmeldingsrett etter bedriftens egen ordning (folketrygdloven § 8-24)",
+        f"☐  Sykt barn (10 dager per kalenderår, 15 ved mer enn to barn, 20/30 ved aleneomsorg — folketrygdloven § 9-6)",
     ]:
         d6.add_paragraph(t)
 
@@ -890,9 +890,19 @@ def _para_key(p: str) -> str:
     return re.sub(r"\s+", "", p).lower()
 
 
-def _hjemmel_avvik(doc: str, harvey_data: dict) -> list[str]:
-    """Finn §-referanser i dokumentet som ikke kan spores til Harvey eller kjent-listen."""
+def _hjemmel_avvik(doc: str, harvey_data: dict, register: dict | None = None) -> list[str]:
+    """Finn §-referanser i dokumentet som ikke kan spores til Harvey, kjent-listen
+    eller lovregisteret.
+
+    Lista går til Louis som «vurder om de er hallusinerte». En paragraf som er
+    merket med lovnavn og funnet i registeret, er slått opp — den skal ikke
+    sendes til en modell som gjetter.
+    """
     tillatt = {_para_key(p) for p in _KJENTE_PARAGRAFER}
+    lover = (register or {}).get("lover") or {}
+    for lov, para in lovregister.siterte_paragrafer(doc):
+        if para in lover.get(lov, {}).get("paragrafer", {}):
+            tillatt.add(_para_key(f"§ {para}"))
     for lov in (harvey_data or {}).get("lover_alltid_gjeldende", []):
         for p in lov.get("paragrafer", []):
             tillatt.add(_para_key(p))
@@ -1245,7 +1255,7 @@ def _mock_harvey(company_info: dict, nace_data: dict | None = None) -> str:
         "verneombud_paakrevd": antall >= 5,
         "bht_paakrevd": bool(nd.get("bht_paakrevd", False)),
         "amu_paakrevd": antall >= 30,
-        "loennskartlegging_paakrevd": antall >= 50,
+        "loennskartlegging_paakrevd": antall > 50,
         "arbeidsreglement_paakrevd": antall > 10,
         "lover_alltid_gjeldende": [
             {"lov": "Arbeidsmiljøloven (AML)", "paragrafer": ["§ 3-1", "§ 4-1", "§ 6-1", "§ 2A-1"],
@@ -1678,7 +1688,7 @@ def run_louis(session_id: str, doc: str, dok_navn: str, harvey_data: dict, compa
     run_id = _create_run(session_id, "louis")
     try:
         system = _read_prompt("louis_system.md")
-        avvik = _hjemmel_avvik(doc, harvey_data)
+        avvik = _hjemmel_avvik(doc, harvey_data, _hent_lovregister())
         avvik_tekst = (
             f"Automatisk hjemmelskontroll flagget disse §-referansene som usporbare "
             f"(vurder om de er hallusinerte): {', '.join(avvik)}\n\n" if avvik else ""

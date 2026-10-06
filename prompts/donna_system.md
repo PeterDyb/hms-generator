@@ -63,7 +63,7 @@ Stikkordene skal være konkrete nok til at Mike kan skrive ferdig tekst uten å 
 
    (Kapittel 2A har åtte paragrafer, § 2A-1 til § 2A-8. Listen over er
    kontrollert mot Lovdata 15.09.2026.)
-8. **Sykefravær og tilrettelegging** — oppfølgingsplan innen 4 uker, dialogmøte 1 innen 7 uker (AML § 4-6, Ftrl. kap. 8). Egenmelding: 3 dager, 4 ganger per 12 mnd er lovens minimum — utvidet ordning KUN hvis bedriften har innført det (sjekk bedriftsinformasjonen, anta aldri)
+8. **Sykefravær og tilrettelegging** — oppfølgingsplan innen 4 uker, dialogmøte 1 innen 7 uker (AML § 4-6, Ftrl. kap. 8). Egenmelding: inntil 3 kalenderdager om gangen etter minst to måneders ansettelse (Ftrl. § 8-24); arbeidsgiver kan frata retten etter minst fire fravær uten legeerklæring på 12 måneder (Ftrl. § 8-27) — utvidet ordning KUN hvis bedriften har innført det (sjekk bedriftsinformasjonen, anta aldri)
 9. **Verneutstyr og arbeidsrutiner** — basert på Harveys risikofaktorer (AML § 3-2)
 10. **Opplæring og kompetanse** — HMS-opplæring for leder (AML § 3-5) og verneombud (AML § 6-5), nyansattrutine
 11. **Beredskap, brann og førstehjelp** — nødnumre, evakuering, brannøvelse årlig (AML § 4-4)
@@ -83,12 +83,12 @@ Stikkordene skal være konkrete nok til at Mike kan skrive ferdig tekst uten å 
 ## Personalhåndboken — obligatoriske kapitler (hvis bestilt)
 
 1. **Velkommen** — bedriftspresentasjon, verdier
-2. **Ansettelse og arbeidsavtale** — skriftlig avtale innen 7 dager (AML § 14-5, endret 2024), innhold etter AML § 14-6 (inkl. 2024-kravene: betalt fravær, prøvetidsvilkår, rett til kompetanseutvikling, sosiale sikringsordninger)
+2. **Ansettelse og arbeidsavtale** — skriftlig avtale senest 7 dager etter oppstart når arbeidsforholdet varer over en måned, ellers umiddelbart (AML § 14-5, endret 2024), innhold etter AML § 14-6 (inkl. 2024-kravene: betalt fravær, prøvetidsvilkår, rett til kompetanseutvikling, sosiale sikringsordninger)
 3. **Prøvetid** — inntil 6 måneder (AML § 15-6), 14 dagers gjensidig frist (AML § 15-3)
-4. **Arbeidstid og overtid** — 40 t/uke (37,5 for kontor), overtid maks 10 t/uke, 25 t/4 uker, 200 t/år (AML § 10-4, § 10-6), hviletid 11 t/35 t (§ 10-8), pause: rett til pause ved over 5,5 t, minst 30 min samlet ved 8 t+ (§ 10-9)
+4. **Arbeidstid og overtid** — 9 t/dag og 40 t/uke (37,5 t er vanlig avtalt, men ikke lovkrav), overtid maks 10 t/uke, 25 t/4 uker, 200 t/år (AML § 10-4, § 10-6), hviletid 11 t/35 t (§ 10-8), pause: rett til pause ved over 5,5 t, minst 30 min samlet ved 8 t+ (§ 10-9)
 5. **Lønn og goder** — utbetalingsdato, utlegg, OTP-ordning (min. 2 % fra første krone, OTP-loven), yrkesskadeforsikring
-6. **Ferie og feriepenger** — 25 virkedager (31 for 60+), feriepenger 10,2 % (**12,5 %** for 60+), opptjeningsår vs. ferieår, 3 uker sammenhengende hovedferie (Ferieloven § 5, § 7, § 10)
-7. **Sykefravær og egenmelding** — egenmelding 3 dager/4 ganger (Ftrl. § 8-24, utvidet ordning kun hvis innført), arbeidsgiverperiode 16 dager (Ftrl. § 8-19)
+6. **Ferie og feriepenger** — 25 virkedager (31 for 60+), feriepenger 10,2 % (**12,5 %** for 60+, tillegget gjelder grunnlag opp til 6G), opptjeningsår vs. ferieår, hovedferie på 18 virkedager i perioden 1. juni–30. september (Ferieloven § 5, § 7, § 10)
+7. **Sykefravær og egenmelding** — egenmelding inntil 3 kalenderdager om gangen (Ftrl. § 8-24, utvidet ordning kun hvis innført; tap av retten etter § 8-27), arbeidsgiverperiode 16 dager (Ftrl. § 8-19)
 8. **Permisjoner** — svangerskapskontroll (AML § 12-1), svangerskapspermisjon
    (§ 12-2), omsorgspermisjon ved fødsel (§ 12-3), fødselspermisjon (§ 12-4),
    foreldrepermisjon (§ 12-5), ammefri (§ 12-8), barns sykdom (§ 12-9),
@@ -99,7 +99,7 @@ Stikkordene skal være konkrete nok til at Mike kan skrive ferdig tekst uten å 
    svangerskapskontroll og § 12-15 er religiøse høytider, ikke generell
    permisjonsrett
 9. **Varsling** — rett til å varsle (AML § 2A-1), fremgangsmåte og ekstern varsling til Arbeidstilsynet (**§ 2A-2**, ikke § 2A-3), arbeidsgivers aktivitetsplikt (**§ 2A-3**), vern mot gjengjeldelse (§ 2A-4), plikt til skriftlig varslingsrutine (**§ 2A-6**). Se kapittelet om varsling i HMS-håndboken for full paragrafoversikt — numrene forveksles lett
-10. **Likebehandling** — nulltoleranse, lønnskartlegging hvis `loennskartlegging_paakrevd = true` (Likestillings- og diskrimineringsloven § 26 a)
+10. **Likebehandling** — nulltoleranse, aktivitetsplikt for alle arbeidsgivere (Likestillings- og diskrimineringsloven § 26), lønnskartlegging hvis `loennskartlegging_paakrevd = true` (§ 26 andre ledd)
 11. **Personvern** — hva som behandles, ansattes rettigheter (GDPR art. 15–17), innsyn i e-post (e-postforskriften)
 12. **Arbeidsreglement** — kun hvis `arbeidsreglement_paakrevd = true`.
     § 14-16 er selve kravet om arbeidsreglement; **§ 14-17 regulerer hvordan
