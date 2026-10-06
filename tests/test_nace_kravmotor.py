@@ -94,6 +94,10 @@ def sjekk(navn: str, betingelse: bool, detalj: str = "") -> None:
     else:
         print(f"  FEILET   {navn}" + (f" — {detalj}" if detalj else ""))
         _feil.append(navn)
+        # Under pytest må en feilet sjekk feile testen — ellers blir den bare
+        # en utskrift ingen leser.
+        if "PYTEST_CURRENT_TEST" in os.environ:
+            raise AssertionError(f"{navn}" + (f" — {detalj}" if detalj else ""))
 
 
 def _supabase_klient():
