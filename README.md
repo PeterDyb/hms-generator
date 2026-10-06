@@ -109,9 +109,11 @@ dataene tier — se `ARKITEKTUR.md` for de dokumenterte eksemplene.
 > i det hele tatt. Kolonnen `gjeldende` skjuler dem fra bransjevelgeren; radene
 > beholdes fordi tidligere sesjoner refererer til dem via fremmednøkkel.
 
-Tester: `python tests/test_nace_kravmotor.py`. Brreg-laget stubbes, så
-validering og feilhåndtering kjører uten nett; kjedetestene krever
-`SUPABASE_URL` + nøkkel og hoppes ellers over.
+Tester: `pip install -r requirements-dev.txt` og `python3 -m pytest tests`.
+Standardkjøringen går uten nett: kvalitetsporter, hjemmelsregisteret (lest fra
+migreringene), modellkallets garantier og kravmotoren med stubbet Brreg.
+`HMS_INTEGRASJON=1` kjører i tillegg testene mot ekte Supabase, blant annet at
+`lovhjemler` i databasen er identisk med migreringene.
 
 ## Innføring og drift
 
@@ -191,7 +193,11 @@ Et avkuttet compliance-dokument er verre enn ingen leveranse.
   AMU fra 30 (§ 7-1), varsling kap. 2A, arbeidsavtalekrav fra 1.7.2024 (§ 14-6)
 - **Internkontrollforskriften** (IK-forskriften, 1996) — § 5 andre ledd nr. 1–8,
   der nr. 4–8 er de kravene som skal dokumenteres skriftlig
-- **Ferieloven**, **OTP-loven** (fra første krone, 2022), **Folketrygdloven** kap. 8–9
+- **Ferieloven**, **OTP-loven** (fra første krone, 2022), **Folketrygdloven** kap. 8–9,
+  **Likestillings- og diskrimineringsloven** (aktivitetsplikt § 26)
+- Paragrafnumrene i alle disse slås opp i `lovhjemler` (362 paragrafer, kontrollert
+  mot Lovdata 06.10.2026). Hva som gjenstår før juridisk kvalitetssikring, står i
+  [JURISTGJENNOMGANG.md](JURISTGJENNOMGANG.md)
 - Arbeidstilsynets bransjeveiledninger via NACE-tabellen i Supabase
 
 > **Merk:** Genererte dokumenter er utkast og beslutningsstøtte — de skal alltid
@@ -212,8 +218,10 @@ hms-generator/
 ├── brreg.py           # Enhetsregisteret med MOD11-validering
 ├── agents/            # Agentdefinisjoner (Harvey, Donna, Mike, Louis, Jessica, Rex)
 ├── prompts/           # System-prompter
-├── migrations/        # 001 skjema · 002 seed · 003 konsolidering + elektro
-├── tests/             # Kravmotor + ende-til-ende
+├── lovregister.py     # Paragrafoppslag → <lovregister> til Mike + hjemmelsport
+├── migrations/        # 001 skjema · 002 seed · 003 elektro · 004–005 lovhjemler
+├── tests/             # pytest: porter, lovregister, kravmotor; ekte_kjoring.py ende-til-ende
+├── JURISTGJENNOMGANG.md # Lovpåstander kontrollert mot Lovdata + åpne spørsmål til jurist
 ├── ui/                # Frontend (index.html + app.js)
 └── output/            # Genererte håndbøker (ignoreres av git)
 ```

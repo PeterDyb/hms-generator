@@ -76,10 +76,12 @@ hms-generator/
 ├── README.md          # oversikt og kom i gang
 ├── ARKITEKTUR.md      # hvordan systemet henger sammen og hvorfor
 ├── AGENTREVIEW.md     # agent-/kvalitetsreview med målbilde
+├── JURISTGJENNOMGANG.md # lovpåstander kontrollert mot Lovdata + åpne spørsmål
 ├── server.py          # FastAPI-server
 ├── pipeline.py        # agent-pipeline med kvalitetsporter + dokumentgeneratorer
 ├── agents/            # agentdefinisjoner (personlighet + ansvar)
 ├── prompts/           # system-prompter som sendes til Claude API
+├── tests/             # pytest (uten nett); HMS_INTEGRASJON=1 for Supabase-testene
 ├── ui/                # frontend (index.html + app.js — ingen inline-script)
 └── output/            # genererte håndbøker (ignoreres av git)
 ```

@@ -167,13 +167,17 @@ Merk at flaggbaserte krav ser på **verdien**, ikke om feltnavnet finnes i JSON-
   Mike aldri skrev om
 
 ### Hjemmelskontroll — `lovregister.hjemmelsfeil`
-Slår siterte AML-paragrafer opp i `lovhjemler` og melder to ting, begge som
+Slår siterte paragrafer opp i `lovhjemler` og melder to ting, begge som
 oppslag uten skjønn: en paragraf som er **opphevet**, og en paragraf som ikke
-finnes i et kapittel vi har registrert **komplett**.
+finnes i et kapittel vi har registrert **komplett**. For lover uten
+kapittelprefiks (IK-forskriften § 5, ferieloven § 10) er hele loven enheten, og
+slike lover legges bare inn komplette.
 
-Bare paragrafer eksplisitt merket som AML kontrolleres — dokumentene siterer
-også ferieloven og folketrygdloven, og «§ 5-2» alene kan tilhøre hvilken som
-helst av dem. Kapitler som ikke er registrert, sies det ingenting om.
+Registeret dekker hele AML, IK-forskriften, ferieloven, OTP-loven,
+likestillings- og diskrimineringsloven og folketrygdloven kap. 8–9. Bare
+paragrafer eksplisitt merket med lovnavn kontrolleres (`lovregister.LOVNAVN`) —
+«§ 5-2» alene kan tilhøre hvilken som helst lov. Kapitler som ikke er
+registrert, sies det ingenting om.
 
 Porten finnes fordi kontrollen tidligere lå hos Louis, som resonnerer om
 paragrafnumre fra hukommelsen uten kilde. Han ba en gang Mike endre
@@ -348,8 +352,8 @@ Disse er reelle og bevisste å kjenne til:
 4. **Seks uverifiserte hjemler for elektro** venter på kontroll mot Lovdata.
 5. **«Tenker» og «død» ser identiske ut** i basen. `agent_runs` oppdateres bare
    når det kommer tekst, og under thinking er strømmen stille.
-6. **Kvalitetsportene har ingen tester.** Systemets faktiske verdiløfte er
-   utestet; `tests/` dekker kravmotoren.
+6. **Ingen juristgjennomgang ennå.** Lovpåstandene er kontrollert mot
+   Lovdata, men ikke vurdert av en jurist — se `JURISTGJENNOMGANG.md`.
 
 En komplett, prioritert liste over forbedringer ligger i funnlisten fra
 31.08.2026.
@@ -372,8 +376,8 @@ hms-generator/
 ├── brreg.py           # Enhetsregisteret, MOD11-validering, norske feilmeldinger
 ├── agents/            # hvem agentene er
 ├── prompts/           # hva som sendes til modellen
-├── migrations/        # 001 skjema · 002 seed · 003 elektro · 004 lovhjemler
-├── tests/             # kravmotor + ende-til-ende
+├── migrations/        # 001 skjema · 002 seed · 003 elektro · 004–005 lovhjemler
+├── tests/             # pytest: porter, lovregister, kravmotor + ende-til-ende
 ├── ui/                # landing.html (salg) · index.html + app.js (generator)
 └── output/            # genererte filer (ignorert av git)
 ```
