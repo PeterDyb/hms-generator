@@ -17,7 +17,7 @@ Alt under er råmateriale å klippe fra, ikke manus å lese opp.
 > fra når du stopper halvveis.
 >
 > Vi genererer hele dokumentasjonen — HMS-håndbok, personalhåndbok, risikovurdering
-> og ni vedlegg — tilpasset bransjen og størrelsen på bedriften. Så kjører vi den
+> og ti vedlegg — tilpasset bransjen og størrelsen på bedriften. Så kjører vi den
 > gjennom maskinelle kontroller: hvert av de fem dokumentasjonskravene i
 > internkontrollforskriften § 5 må ha sitt eget kapittel, HMS-målene må ha tall og
 > frist, og ingen plassholdere får stå igjen. Består ikke dokumentet, blir det ikke
@@ -66,7 +66,7 @@ Kort, konkret, ingen oppfølgingsmas. Bytt ut det som står i `‹ ›`.
 > Arbeidstilsynet ber om.
 >
 > Jeg har laget et verktøy som genererer hele dokumentasjonen for en bedrift som
-> deres: HMS-håndbok, personalhåndbok, risikovurdering og ni utfyllbare skjemaer,
+> deres: HMS-håndbok, personalhåndbok, risikovurdering og ti utfyllbare skjemaer,
 > tilpasset NACE-koden og antall ansatte. Alt kontrolleres maskinelt mot kravene
 > før det leveres — mangler et HMS-mål tallfestet frist, stoppes leveransen.
 >

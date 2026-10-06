@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>HMS-generator — HMS-dokumentasjonen ferdig, ikke enda en mal</title>
-<meta name="description" content="Komplett HMS-håndbok, personalhåndbok, risikovurdering og ni vedlegg, tilpasset bransjen din. Kontrollert mot internkontrollforskriften før du får den." />
+<meta name="description" content="Komplett HMS-håndbok, personalhåndbok, risikovurdering og ti vedlegg, tilpasset bransjen din. Kontrollert mot internkontrollforskriften før du får den." />
 
 <!--
   ╔══════════════════════════════════════════════════════════════════════╗
@@ -12,8 +12,9 @@
   ║                                                                      ║
   ║  1. PRIS   — søk på «4 900» (3 treff). Tallet er et FORSLAG fra      ║
   ║              Claude, ikke en pris du har bestemt. Sett din egen.     ║
-  ║  2. KJØP   — søk på «BYTT-MEG-BETALINGSLENKE» (2 treff).            ║
-  ║              Lim inn Stripe Payment Link eller Vipps-lenke.          ║
+  ║  2. KJØP   — «Kjøp og kom i gang» peker nå på /app (2 treff på      ║
+  ║              href="/app" i btn-primary). Bytt til Stripe- eller      ║
+  ║              Vipps-lenke når betaling er på plass — se TODO-ene.     ║
   ║  3. E-POST — søk på «post@example.no» (2 treff).                    ║
   ║  4. TID    — søk på «BYTT-MEG-TID» (1 treff). Mål én ekte kjøring   ║
   ║              og skriv inn faktisk tid.                               ║
@@ -409,12 +410,13 @@
       <p class="eyebrow">For bedrifter med 5–50 ansatte</p>
       <h1>HMS-dokumentasjonen ferdig. Ikke <em>enda en mal</em> du aldri blir ferdig med.</h1>
       <p class="lede">
-        Komplett HMS-håndbok, personalhåndbok, risikovurdering og ni vedlegg —
+        Komplett HMS-håndbok, personalhåndbok, risikovurdering og ti vedlegg —
         tilpasset bransjen og størrelsen på bedriften din. Hvert dokument
         kontrolleres mot internkontrollforskriften før du får det utlevert.
       </p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="BYTT-MEG-BETALINGSLENKE">Kjøp og kom i gang</a>
+        <!-- TODO: bytt til betalingslenke (Stripe/Vipps) når betaling er på plass -->
+        <a class="btn btn-primary" href="/app">Kjøp og kom i gang</a>
         <a class="btn btn-ghost" href="#kontroll">Se hva som kontrolleres</a>
       </div>
       <p class="price-note">
@@ -443,41 +445,14 @@
   </div>
 </section>
 
-<section class="band">
-  <div class="wrap">
-    <div class="col" style="display:flex; flex-direction:column; gap:20px;">
-      <p class="eyebrow">Problemet</p>
-      <h2 style="font-size:30px;">Maler vet ikke om du er ferdig</h2>
-      <p>
-        Du har sannsynligvis prøvd allerede. En mal lastet ned fra nettet, eller
-        et dokument arvet fra forrige regnskapsfører. Det ligger på fellesområdet,
-        og et sted midt inni står det fortsatt <code style="font-family:var(--mono); font-size:.9em; background:var(--stop-wash); color:var(--stop); padding:1px 5px; border-radius:2px;">[BEDRIFTSNAVN]</code>.
-        Tabellen med HMS-mål er tom. Den årlige gjennomgangen er aldri gjennomført,
-        fordi ingen visste at den var et krav.
-      </p>
-      <p>
-        Problemet med maler er ikke at de er dårlige. Det er at de er ferdige i det
-        øyeblikket du laster dem ned — mens jobben din så vidt har begynt. Ingen sier
-        fra hvis du stopper halvveis.
-      </p>
-      <p>
-        Alternativet er en HMS-konsulent til titusener av kroner og flere ukers
-        kalendertid. For en bedrift med tolv ansatte er det ofte grunnen til at
-        det aldri blir gjort i det hele tatt.
-      </p>
-    </div>
-  </div>
-</section>
-
 <section class="band band-alt" id="hva-du-far">
   <div class="wrap">
     <div class="col" style="display:flex; flex-direction:column; gap:14px;">
       <p class="eyebrow">Leveransen</p>
-      <h2 style="font-size:30px;">Elleve dokumenter, fire formater</h2>
+      <h2 style="font-size:30px;">Tolv dokumenter, fire formater</h2>
       <p class="lede" style="font-size:17px;">
-        Alt kommer ferdig utfylt med bedriftens navn, organisasjonsnummer og
-        bransje. Word-filene kan redigeres videre, PDF-ene kan skrives ut og
-        settes i perm, JSON-filene kan leses inn i andre systemer.
+        Ferdig utfylt med bedriftens navn, organisasjonsnummer og bransje.
+        Word til redigering, PDF til perm, JSON til andre systemer.
       </p>
     </div>
 
@@ -495,6 +470,11 @@
             <td><span class="doc-name">HMS-håndbok</span></td>
             <td class="fmt">docx · pdf · md · json</td>
             <td class="law">IK-forskriften § 5 andre ledd nr. 4–8</td>
+          </tr>
+          <tr>
+            <td><span class="doc-name">Innføringsplan HMS</span></td>
+            <td class="fmt">docx · pdf</td>
+            <td class="law">IK-forskriften § 4</td>
           </tr>
           <tr>
             <td><span class="doc-name">Personalhåndbok</span></td>
@@ -551,27 +531,24 @@
     </div>
 
     <p class="col" style="color:var(--ink-soft); font-size:15px;">
-      Skjemaene er ikke løse filer du må holde orden på selv. Håndboken får et
-      eget vedleggskapittel som viser hvert skjema med bruksområde, filnavn og
-      hjemmel — slik at dokumentasjonen henger sammen når noen spør etter den.
+      Skjemaene er ikke løse filer. Håndboken får et vedleggskapittel som viser
+      hvert skjema med bruksområde, filnavn og hjemmel — og åpner med en
+      innføringsplan og et årshjul, fordi § 4 krever at systemet <em>innføres og
+      utøves</em>, ikke bare skrives.
     </p>
   </div>
 </section>
 
 <section class="band" id="kontroll">
   <div class="wrap">
-    <div class="col" style="display:flex; flex-direction:column; gap:20px;">
+    <div class="col" style="display:flex; flex-direction:column; gap:14px;">
       <p class="eyebrow">Kvalitetskontrollen</p>
       <h2 style="font-size:30px;">Fem krav, kontrollert i kode</h2>
       <p>
-        Internkontrollforskriften § 5 andre ledd lister åtte punkter. Nummer
-        <strong>4 til 8</strong> er de som skal kunne dokumenteres skriftlig — det er
-        dem Arbeidstilsynet ber om å få se. Vi sjekker hvert punkt for seg, maskinelt,
-        før dokumentet forlater systemet.
-      </p>
-      <p>
-        Kontrollene er kode, ikke skjønn. De kan ikke overtales, og de kan ikke ha
-        en dårlig dag. Består ikke dokumentet, blir det ikke levert — det skrives om.
+        Internkontrollforskriften § 5 andre ledd nr. 4–8 er punktene
+        Arbeidstilsynet ber om å få se skriftlig. Hvert punkt sjekkes maskinelt
+        før dokumentet forlater systemet. Kontrollene er kode, ikke skjønn — de
+        kan ikke overtales, og de kan ikke ha en dårlig dag.
       </p>
     </div>
 
@@ -580,8 +557,7 @@
         <div class="gate-nr">§ 5 · nr. 4</div>
         <div class="gate-body">
           <h3>Mål for helse, miljø og sikkerhet</h3>
-          <p>«Vi skal ha et godt arbeidsmiljø» er ikke et mål. Et mål har et tall, en dato og et navn.</p>
-          <p class="gate-check">Krever minst tre mål i tabell. Måltall og frist må inneholde siffer, og ansvarlig må være navngitt — ellers stoppes leveransen.</p>
+          <p class="gate-check">Minst tre mål i tabell. Måltall og frist må inneholde siffer, ansvarlig må være navngitt. «Vi skal ha et godt arbeidsmiljø» stopper leveransen.</p>
         </div>
       </article>
 
@@ -589,8 +565,7 @@
         <div class="gate-nr">§ 5 · nr. 5</div>
         <div class="gate-body">
           <h3>Ansvar, oppgaver og myndighet</h3>
-          <p>Hvem gjør hva. Verneombud er påbudt fra fem ansatte, arbeidsmiljøutvalg fra tretti.</p>
-          <p class="gate-check">Krever eget kapittel om ansvar og organisering, der både daglig leder og verneombud er omtalt.</p>
+          <p class="gate-check">Eget kapittel om ansvar og organisering, der både daglig leder og verneombud er omtalt. Verneombud er påbudt fra fem ansatte, AMU fra tretti.</p>
         </div>
       </article>
 
@@ -598,8 +573,7 @@
         <div class="gate-nr">§ 5 · nr. 6</div>
         <div class="gate-body">
           <h3>Kartlegging av farer, risiko og tiltak</h3>
-          <p>Risikoene skal være bedriftens egne — ikke en generisk liste som passer alle.</p>
-          <p class="gate-check">Krever eget kapittel som dekker både risiko og tiltak, med tilhørende risikovurdering i regneark.</p>
+          <p class="gate-check">Eget kapittel som dekker både risiko og tiltak, med tilhørende risikovurdering i regneark — bedriftens egne risikoer, ikke en generisk liste.</p>
         </div>
       </article>
 
@@ -607,8 +581,7 @@
         <div class="gate-nr">§ 5 · nr. 7</div>
         <div class="gate-body">
           <h3>Rutiner for avvik</h3>
-          <p>Hva ansatte gjør når noe går galt, og hvordan det rettes opp og forebygges.</p>
-          <p class="gate-check">Krever eget avvikskapittel som beskriver både melding og retting — ikke bare at avvik «skal meldes».</p>
+          <p class="gate-check">Eget avvikskapittel som beskriver både melding og retting — ikke bare at avvik «skal meldes».</p>
         </div>
       </article>
 
@@ -616,44 +589,31 @@
         <div class="gate-nr">§ 5 · nr. 8</div>
         <div class="gate-body">
           <h3>Årlig gjennomgang av systemet</h3>
-          <p>Punktet flest bedrifter stryker på. Systemet skal gjennomgås minst én gang i året — og gjennomgangen skal kunne dokumenteres.</p>
-          <p class="gate-check">Krever eget kapittel om årlig gjennomgang, og du får et ferdig utfyllingsskjema for selve gjennomgangen.</p>
+          <p class="gate-check">Eget kapittel om årlig gjennomgang, pluss ferdig utfyllingsskjema. Punktet flest bedrifter stryker på.</p>
         </div>
       </article>
-    </div>
 
-    <div class="col" style="display:flex; flex-direction:column; gap:14px;">
-      <h3 style="font-size:19px;">To kontroller til, utenom forskriften</h3>
-      <p style="color:var(--ink-soft);">
-        <strong style="color:var(--ink);">Ingen gjenglemte plassholdere.</strong>
-        Finnes det en <code style="font-family:var(--mono); font-size:.9em;">[SETT INN NOE]</code> igjen
-        noe sted i dokumentet, stoppes leveransen. Dette er den vanligste grunnen
-        til at maler ender halvferdige.
-      </p>
-      <p style="color:var(--ink-soft);">
-        <strong style="color:var(--ink);">Lovhenvisninger spores til kilde.</strong>
-        Hver paragrafhenvisning i teksten sammenlignes med lovkartleggingen som ble
-        gjort for din bedrift. Henvisninger som ikke lar seg spore, flagges og
-        kontrolleres særskilt før godkjenning.
-      </p>
+      <article class="gate">
+        <div class="gate-nr">Utenom<br>forskriften</div>
+        <div class="gate-body">
+          <h3>Plassholdere og lovhenvisninger</h3>
+          <p class="gate-check">Gjenglemte plassholdere stopper leveransen. Hver paragrafhenvisning spores mot lovkartleggingen for din bedrift; det som ikke lar seg spore, flagges.</p>
+        </div>
+      </article>
     </div>
   </div>
 </section>
 
 <section class="band band-alt">
   <div class="wrap">
-    <div class="col" style="display:flex; flex-direction:column; gap:16px;">
+    <div class="col" style="display:flex; flex-direction:column; gap:14px;">
       <p class="eyebrow">Bransjetilpasning</p>
       <h2 style="font-size:30px;">En frisørsalong og et byggefirma har ikke samme risiko</h2>
       <p>
-        Du velger NACE-koden din, og lovkartleggingen tar utgangspunkt i den:
-        bransjens egne krav, typiske farer og Arbeidstilsynets veiledning for
-        området. Deretter justeres alt etter antall ansatte og forhold du selv
-        oppgir — skiftarbeid, farlige stoffer, tungt arbeid, arbeid i høyden.
-      </p>
-      <p>
-        En bedrift med fire ansatte får ikke et kapittel om arbeidsmiljøutvalg
-        de ikke er pålagt å ha. En med trettifem får det.
+        Lovkartleggingen tar utgangspunkt i NACE-koden din, og justeres etter
+        antall ansatte og forhold du oppgir. En bedrift med fire ansatte får ikke
+        et kapittel om arbeidsmiljøutvalg de ikke er pålagt å ha. En med
+        trettifem får det.
       </p>
     </div>
 
@@ -661,17 +621,17 @@
       <div class="law-cell">
         <span class="law-ref">LOV-2005-06-17-62</span>
         <h3>Arbeidsmiljøloven</h3>
-        <p>Verneombud fra 5 ansatte, arbeidsmiljøutvalg fra 30, varsling i kapittel 2A, og kravene til arbeidsavtale som gjelder fra 1. juli 2024.</p>
+        <p>Verneombud fra 5 ansatte, AMU fra 30, varsling i kapittel 2A, og kravene til arbeidsavtale fra 1. juli 2024.</p>
       </div>
       <div class="law-cell">
         <span class="law-ref">FOR-1996-12-06-1127</span>
         <h3>Internkontrollforskriften</h3>
-        <p>§ 5 andre ledd nr. 4–8 — de fem punktene som skal kunne dokumenteres skriftlig, og som utgjør ryggraden i håndboken.</p>
+        <p>§ 5 andre ledd nr. 4–8 — de fem punktene som skal dokumenteres skriftlig.</p>
       </div>
       <div class="law-cell">
         <span class="law-ref">Ferieloven · OTP · Ftrl.</span>
         <h3>Øvrig regelverk</h3>
-        <p>Feriepenger med 12,5 % fra fylte 60, obligatorisk tjenestepensjon fra første krone, og sykepengereglene i folketrygdloven kapittel 8 og 9.</p>
+        <p>Feriepenger med 12,5 % fra fylte 60, OTP fra første krone, sykepenger i folketrygdloven kap. 8 og 9.</p>
       </div>
     </div>
   </div>
@@ -690,18 +650,18 @@
         <span class="unit">eks. mva — engangsbeløp</span>
       </div>
       <ul class="price-list">
-        <li><span class="tick" aria-hidden="true">✓</span><span>Elleve dokumenter i inntil fire formater hver</span></li>
+        <li><span class="tick" aria-hidden="true">✓</span><span>Tolv dokumenter i inntil fire formater hver</span></li>
         <li><span class="tick" aria-hidden="true">✓</span><span>Tilpasset NACE-kode, antall ansatte og oppgitte risikoforhold</span></li>
         <li><span class="tick" aria-hidden="true">✓</span><span>Alle kvalitetskontroller bestått før utlevering</span></li>
         <li><span class="tick" aria-hidden="true">✓</span><span>Word-filer du eier og kan redigere fritt</span></li>
-        <li><span class="tick" aria-hidden="true">✓</span><span>Ingen binding, ingen månedlig kostnad</span></li>
       </ul>
       <div class="cta-row">
-        <a class="btn btn-primary" href="BYTT-MEG-BETALINGSLENKE">Kjøp og kom i gang</a>
+        <!-- TODO: bytt til betalingslenke (Stripe/Vipps) når betaling er på plass -->
+        <a class="btn btn-primary" href="/app">Kjøp og kom i gang</a>
       </div>
       <p class="price-note">
-        Til sammenligning ligger en HMS-konsulent for en bedrift på denne
-        størrelsen typisk mellom 15 000 og 40 000 kroner.
+        En HMS-konsulent for en bedrift på denne størrelsen ligger typisk mellom
+        15 000 og 40 000 kroner.
       </p>
     </div>
   </div>
@@ -719,64 +679,45 @@
         <summary>Er dette godkjent av Arbeidstilsynet?</summary>
         <p>
           Nei — og det er ingen andre HMS-systemer heller. Arbeidstilsynet
-          godkjenner ikke internkontrollsystemer i det hele tatt. De fører tilsyn
-          med at bedriften faktisk har et system som fungerer, og ber da om å se
-          dokumentasjonen. Er noen som påstår at produktet deres er
-          «Arbeidstilsynet-godkjent», stemmer det ikke.
-        </p>
-        <p>
-          Det du får her er dokumentasjonen, bygget etter kravene i
-          internkontrollforskriften § 5.
+          godkjenner ikke internkontrollsystemer. De fører tilsyn med at bedriften
+          har et system som fungerer, og ber da om å se dokumentasjonen. Påstår
+          noen at produktet deres er «Arbeidstilsynet-godkjent», stemmer det ikke.
         </p>
       </details>
 
       <details>
         <summary>Vi har en HMS-perm fra før — trenger vi dette?</summary>
         <p>
-          Kanskje ikke. Sjekk tre ting i permen dere har: Står det HMS-mål med
-          tallfestet måltall, frist og navngitt ansvarlig? Er den årlige
-          gjennomgangen av systemet gjennomført og dokumentert? Er
-          risikovurderingen oppdatert etter siste endring i bedriften?
-        </p>
-        <p>
-          Mangler ett av de tre, er permen ikke i mål — og det er som regel
-          nummer to som mangler.
+          Sjekk tre ting i permen dere har: Står det HMS-mål med tallfestet
+          måltall, frist og navngitt ansvarlig? Er den årlige gjennomgangen
+          gjennomført og dokumentert? Er risikovurderingen oppdatert etter siste
+          endring i bedriften? Mangler ett av de tre, er permen ikke i mål — og
+          det er som regel nummer to.
         </p>
       </details>
 
       <details>
         <summary>Hvor lang tid tar det?</summary>
         <p>
-          BYTT-MEG-TID. Du fyller ut ett skjema med opplysninger om bedriften,
-          og får dokumentene ferdige til nedlasting i samme økt.
+          BYTT-MEG-TID. Du fyller ut ett skjema om bedriften og får dokumentene
+          ferdige til nedlasting i samme økt.
         </p>
       </details>
 
       <details>
         <summary>Kan jeg redigere dokumentene etterpå?</summary>
         <p>
-          Ja. Alt leveres som Word-filer i tillegg til PDF, og du eier dem.
-          Det er også meningen at du skal redigere dem — HMS-systemet er
-          bedriftens eget, og skal tilpasses etter hvert som ting endrer seg.
+          Ja. Alt leveres som Word i tillegg til PDF, og du eier filene. Det er
+          også meningen — HMS-systemet er bedriftens eget og skal tilpasses
+          etter hvert som ting endrer seg.
         </p>
       </details>
 
       <details>
         <summary>Hva skjer når regelverket endres?</summary>
         <p>
-          Dokumentene er riktige etter regelverket slik det gjelder på
-          kjøpstidspunktet. Ved et engangskjøp følger det ikke med automatisk
-          oppdatering senere — endres loven vesentlig, må dokumentene oppdateres,
-          enten av dere selv i Word-filene eller ved en ny generering.
-        </p>
-      </details>
-
-      <details>
-        <summary>Hva skjer med opplysningene om bedriften?</summary>
-        <p>
-          Opplysningene du fyller inn brukes til å generere dokumentene og lagres
-          i sesjonen din. Det etterspørres ingen personopplysninger om ansatte —
-          bare opplysninger om virksomheten.
+          Dokumentene følger regelverket slik det gjelder på kjøpstidspunktet.
+          Ved et engangskjøp følger det ikke med automatisk oppdatering senere.
         </p>
       </details>
     </div>
@@ -788,16 +729,11 @@
     <div class="disclaimer">
       <h3>Dokumentene er utkast — og det er poenget</h3>
       <p>
-        Det du får er et gjennomarbeidet utgangspunkt som skal gjennomgås, tilpasses
-        og vedtas av ledelsen før det tas i bruk. Det er ikke en forbeholdssetning
-        vi har lagt til for sikkerhets skyld: det er slik internkontroll er ment å
-        virke. Et HMS-system ingen i bedriften har lest eller vedtatt, er ikke et
-        HMS-system — uansett hvem som skrev det.
-      </p>
-      <p>
-        Vi tar bort den delen av jobben som er å skrive alt fra bunnen og passe på
-        at ingenting mangler. Delen som er å bli enige om hvordan dere faktisk skal
-        jobbe, kan ingen ta fra dere.
+        Det du får er et gjennomarbeidet utgangspunkt som skal gjennomgås og
+        vedtas av ledelsen før det tas i bruk. Det er ikke en forbeholdssetning:
+        et HMS-system ingen i bedriften har lest eller vedtatt, er ikke et
+        HMS-system — uansett hvem som skrev det. Vi tar bort skrivejobben. Delen
+        som er å bli enige om hvordan dere faktisk skal jobbe, kan ingen ta fra dere.
       </p>
     </div>
   </div>

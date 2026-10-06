@@ -35,6 +35,22 @@ async function ensureAuth() {
   return true;
 }
 
+/* FastAPI sender valideringsfeil som en LISTE av {loc, msg}, ikke en streng.
+   Den forskjellen kostet oss en feilsøkingsrunde: en avvist NACE-kode ble vist
+   som «sjekk at serveren kjører», mens serveren svarte helt presist hva som
+   var galt. Vis alltid det serveren faktisk sa. */
+function beskrivFeil(err, status) {
+  const d = err && err.detail;
+  if (typeof d === "string") return d;
+  if (Array.isArray(d) && d.length) {
+    return d.map(f => {
+      const felt = Array.isArray(f.loc) ? f.loc[f.loc.length - 1] : "";
+      return felt ? `${felt}: ${f.msg}` : f.msg;
+    }).join("\n");
+  }
+  return `Generering kunne ikke startes (HTTP ${status}).`;
+}
+
 function apiFetch(path, options = {}) {
   return fetch(path, {
     ...options,
@@ -126,7 +142,7 @@ async function onFormSubmit(e) {
 
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
-    alert(typeof err.detail === "string" ? err.detail : "Kunne ikke starte generering. Sjekk at serveren kjører.");
+    alert(beskrivFeil(err, resp.status));
     btn.disabled = false;
     btn.textContent = "Start generering";
     return;

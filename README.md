@@ -3,6 +3,10 @@
 Automatisk generering av HMS-håndbøker og personalhåndbøker for norske bedrifter,
 med kvalitetsporter som garanterer komplette dokumenter — eller ingen leveranse.
 
+> Denne filen er oversikten og kom-i-gang-veiledningen.
+> **[`ARKITEKTUR.md`](ARKITEKTUR.md)** forklarer hvordan systemet henger sammen
+> og hvorfor designvalgene er som de er.
+
 ## Oversikt
 
 ```
@@ -49,6 +53,7 @@ Alt havner i `output/<session_id>/`, prefikset med bedriftsnavn og dato.
 | Personalhåndbok | `md`, `json`, `docx`, `pdf` | AML kap. 2A, 14, ferieloven, OTP |
 | Risikovurdering | `xlsx`, `json`, `docx`, `pdf` | IK-forskriften § 5 andre ledd nr. 6 |
 | Årlig gjennomgang av HMS-systemet | `docx`, `pdf` | IK-forskriften § 5 andre ledd nr. 8 |
+| Innføringsplan HMS | `docx`, `pdf` | IK-forskriften § 4 |
 | 7 utfyllbare skjemaer | `docx` | AML § 3-1, § 3-4, § 14-5, ftrl. § 8-24, GDPR |
 
 **JSON-formatet** er maskinlesbart med dokumentmeta, kapitler og hjemler — laget
@@ -60,6 +65,73 @@ taushetserklæring (personal). Skjemaene er ikke løse filer på en disk: håndb
 får et eget **vedleggskapittel** som viser hvert skjema med bruksområde, filnavn
 og hjemmel, slik at dokumentasjonen henger sammen ved tilsyn.
 
+## NACE-basert kravmotor
+
+Kjeden er `organisasjonsnummer → Brønnøysund → NACE-kode → verifiserte hjemler`,
+slik at Harvey siterer «byggherreforskriften § 7» i stedet for generisk bransjetekst.
+
+- `brreg.py` — oppslag mot Enhetsregisteret (åpent API, ingen nøkkel). Validerer
+  MOD11-kontrollsiffer før nettverkskall, og skiller ugyldig nummer / ukjent
+  enhet / slettet enhet / tjeneste nede i egne feilkoder med norsk brukermelding.
+- `nace_krav.py` — slår NACE-kode opp mot databasen og bygger `<bransjekrav>`-blokken
+  Harvey får som avgrenset data.
+- `migrations/001_nace_kravmotor.sql` + `002_nace_seed.sql` — skjema og seed.
+
+**Tabellen `nace_forskriftskrav`** har én rad per paragraf, med `kilde_url` og
+`verifisert_dato`. En hjemmel uten dato er en hjemmel ingen har kontrollert.
+Den erstatter kolonnen `harvey_nace_krav.forskrifter` (`text[]`), som ikke kunne
+bære forskriftsnummer og paragraf strukturert. Kolonnen er beholdt, men utgått.
+
+**`bht_paakrevd` er tri-state.** `true`/`false` = vurdert mot bransjelista i
+FOR-2011-12-06-1355 § 13-1. `NULL` = ikke verifisert, og Harvey skal da flagge
+kravet for manuell vurdering framfor å anta at BHT er unødvendig. Lista lot seg
+ikke hente maskinelt fra Lovdata, så kun bygg/anlegg, helse og renhold er satt.
+
+**Dekning:** 17 gjeldende NACE-koder. Er koden ikke dekket, svarer motoren
+`dekning: "ingen"` med tom hjemmelsliste, og promptblokken ber eksplisitt Harvey
+om å ikke dikte opp bransjeforskrifter.
+
+**Verifisert vs. ukontrollert.** Hjemler med `verifisert_dato` gis til Harvey som
+«bruk NØYAKTIG disse henvisningene». Hjemler uten dato sier i stedet at temaet
+SKAL dekkes, men at paragrafnummer ikke skal siteres og frekvenser eller
+terskelverdier ikke skal gjettes. Skillet finnes fordi modellen dikter der
+dataene tier — se `ARKITEKTUR.md` for de dokumenterte eksemplene.
+
+> **To feil funnet ved verifisering mot Lovdata (15.08.2026):** Harvey-prompten
+> siterte BHT-kravet som `FOR-2009-01-01-70` (finnes ikke — riktig er
+> FOR-2011-12-06-1355 § 13-1) og kjøre- og hviletid som `FOR-2007-02-02-190`
+> (riktig er FOR-2007-07-02-877). Begge er rettet.
+
+> **Ryddet 31.08.2026 (`migrations/003`):** `harvey_nace_krav` bar 28 eldre rader
+> på formen `F41`, `Q86`, `N81`. Brønnøysund oppgir NACE etter SN2007 (`41.200`,
+> `86.211`), så de kunne aldri treffes av et oppslag — og de hadde ingen
+> forskriftshjemler, så en håndbok generert på dem fikk ingen bransjetilpasning
+> i det hele tatt. Kolonnen `gjeldende` skjuler dem fra bransjevelgeren; radene
+> beholdes fordi tidligere sesjoner refererer til dem via fremmednøkkel.
+
+Tester: `pip install -r requirements-dev.txt` og `python3 -m pytest tests`.
+Standardkjøringen går uten nett: kvalitetsporter, hjemmelsregisteret (lest fra
+migreringene), modellkallets garantier og kravmotoren med stubbet Brreg.
+`HMS_INTEGRASJON=1` kjører i tillegg testene mot ekte Supabase, blant annet at
+`lovhjemler` i databasen er identisk med migreringene.
+
+## Innføring og drift
+
+Dokumentene alene dekker ikke kravene — IK-forskriften § 4 krever at internkontroll
+*innføres og utøves*, i samarbeid med de ansatte. HMS-håndboken får derfor en
+deterministisk seksjon «Slik tar dere håndboken i bruk» (`innforingsplan_markdown`)
+med innføringssteg og årshjul, og innføringsplanen følger med som eget
+utfyllingsskjema.
+
+Stegene er terskelstyrt: verneombud fra 5 ansatte, AMU fra 30. Under 5 ansatte
+beskrives skriftlig avtale om annen ordning i stedet.
+
+> **Merk for videre utvikling:** seksjonens `##`-overskrift må aldri inneholde ord
+> fra `IK_DOKUMENTASJONSKRAV[...]["overskrift"]`. Siden teksten alltid genereres,
+> ville en kollisjon gjort seksjonen til en kandidat i `ik_dekning_feil` og gitt
+> **falsk bestått** for et krav Mike aldri skrev kapittel om. Underpunkter bruker
+> `###`, som `_kapittelseksjoner` hopper over.
+
 ## Kvalitetsporter
 
 Portene er kode, ikke modellvurderinger — de kan ikke overtales bort.
@@ -67,9 +139,17 @@ Portene er kode, ikke modellvurderinger — de kan ikke overtales bort.
 **Per kapittel** (alt Mike skriver): riktig overskrift, minstelengde,
 ingen gjenglemte plassholdere.
 
+**Per kapittelplan** (Donna): emner Harvey har kartlagt må ha et kapittel.
+I dag varsling etter AML kap. 2A, og arbeidsreglement når det er påkrevd.
+Porten ligger hos Donna framfor hos Louis fordi reparasjonsrunden kan omskrive
+kapitler som finnes, men ikke opprette nye — mangler kapittelet i planen, er
+leveransen tapt uansett hvor godt Mike skriver.
+
 **Per sammensatt dokument** (både HMS- og personalhåndbok):
 - Alle planlagte kapitler finnes i dokumentet
 - Ingen plassholdere noe sted
+- **Faktakonsistens** — bedriftsnavnet skrevet med samme bokstavbruk overalt,
+  og ingen frist som ligger før dokumentdatoen
 
 **Kun HMS-håndboken:**
 - **Målbare HMS-mål** — minst 3 mål i tabell (Mål | Måltall | Frist | Ansvarlig),
@@ -81,6 +161,10 @@ ingen gjenglemte plassholdere.
 **Hjemmelskontroll:** koden finner §-referanser i dokumentet som ikke kan spores
 til Harveys lovliste eller kjent-listen, og sender dem inn i Louis' kontroll som
 flagg — Louis avgjør om de er hallusinerte eller legitime.
+
+**Louis' alvorsgradering:** `KRITISK` (lovfeil) og `HØY` (manglende påkrevd
+innhold) stopper leveransen. `MIDDELS` forsøkes rettet, men blokkerer ikke — en
+port som krevde tom funnliste gjorde Louis ute av stand til å godkjenne noe.
 
 **Hard feil:** `stop_reason == "max_tokens"` fra modellen avbryter kjøringen.
 Et avkuttet compliance-dokument er verre enn ingen leveranse.
@@ -109,7 +193,11 @@ Et avkuttet compliance-dokument er verre enn ingen leveranse.
   AMU fra 30 (§ 7-1), varsling kap. 2A, arbeidsavtalekrav fra 1.7.2024 (§ 14-6)
 - **Internkontrollforskriften** (IK-forskriften, 1996) — § 5 andre ledd nr. 1–8,
   der nr. 4–8 er de kravene som skal dokumenteres skriftlig
-- **Ferieloven**, **OTP-loven** (fra første krone, 2022), **Folketrygdloven** kap. 8–9
+- **Ferieloven**, **OTP-loven** (fra første krone, 2022), **Folketrygdloven** kap. 8–9,
+  **Likestillings- og diskrimineringsloven** (aktivitetsplikt § 26)
+- Paragrafnumrene i alle disse slås opp i `lovhjemler` (362 paragrafer, kontrollert
+  mot Lovdata 06.10.2026). Hva som gjenstår før juridisk kvalitetssikring, står i
+  [JURISTGJENNOMGANG.md](JURISTGJENNOMGANG.md)
 - Arbeidstilsynets bransjeveiledninger via NACE-tabellen i Supabase
 
 > **Merk:** Genererte dokumenter er utkast og beslutningsstøtte — de skal alltid
@@ -119,14 +207,21 @@ Et avkuttet compliance-dokument er verre enn ingen leveranse.
 
 ```
 hms-generator/
+├── ARKITEKTUR.md      # Hvordan systemet henger sammen og hvorfor
 ├── CLAUDE.md          # Prosjektguide for Claude
 ├── README.md          # Denne filen
 ├── AGENTREVIEW.md     # Agent-/kvalitetsreview
 ├── server.py          # FastAPI-server
 ├── pipeline.py        # Agent-pipeline, kvalitetsporter, Excel + Word-skjemaer
 ├── eksport.py         # Eksportlag: JSON/DOCX/PDF, HMS-mål- og IK-kontroll
+├── nace_krav.py       # NACE-oppslag → <bransjekrav> til Harvey
+├── brreg.py           # Enhetsregisteret med MOD11-validering
 ├── agents/            # Agentdefinisjoner (Harvey, Donna, Mike, Louis, Jessica, Rex)
 ├── prompts/           # System-prompter
+├── lovregister.py     # Paragrafoppslag → <lovregister> til Mike + hjemmelsport
+├── migrations/        # 001 skjema · 002 seed · 003 elektro · 004–005 lovhjemler
+├── tests/             # pytest: porter, lovregister, kravmotor; ekte_kjoring.py ende-til-ende
+├── JURISTGJENNOMGANG.md # Lovpåstander kontrollert mot Lovdata + åpne spørsmål til jurist
 ├── ui/                # Frontend (index.html + app.js)
 └── output/            # Genererte håndbøker (ignoreres av git)
 ```

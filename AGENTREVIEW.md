@@ -79,7 +79,7 @@ Kode    → regenererer kun kapitler med funn (maks 2 iterasjoner) → lever
 7. IK-forskriften § 5 andre ledd nr. 4–8: hvert dokumentasjonskrav må ha et eget kapittel
    (henvisningsformen «§ 5 a–e» var feil — forskriften bruker nummererte punkter)
 
-**Parametre:** `temperature=0.2` for alle agenter (compliance-dokumenter skal være deterministiske), `max_tokens` per agent (Harvey 4k, Donna 8k, Mike 4–8k *per kapittel*, Jessica 8k for QA-funn).
+**Parametre:** adaptiv thinking for alle agenter på `claude-sonnet-5` (`temperature` finnes ikke lenger på modellen), `max_tokens` per agent (Harvey/Donna/Louis/Jessica 24k, Mike 32k *per kapittel*) — hevet fordi thinking-tokens teller mot taket og `max_tokens` er en hard feil.
 
 ---
 

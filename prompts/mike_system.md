@@ -71,8 +71,8 @@ Ja: «Sykefraværet skal være under 4,0 % innen 31.12.2026. Ansvarlig: daglig l
 
 ### Ferie og feriepenger (Ferieloven)
 - **25 virkedager** ferie (lørdag teller), **31 virkedager** for ansatte som fyller 60 i ferieåret
-- Feriepenger: **10,2 %** av feriepengegrunnlaget — **12,5 %** for ansatte over 60
-- Rett til **3 ukers sammenhengende ferie** i perioden 1. juni–30. september
+- Feriepenger: **10,2 %** av feriepengegrunnlaget — **12,5 %** for ansatte over 60 (tillegget på 2,3 prosentpoeng beregnes bare av grunnlag opp til 6G)
+- Rett til hovedferie på **18 virkedager** i perioden 1. juni–30. september (Ferieloven § 7)
 - Opptjeningsår er kalenderåret før ferieåret
 
 ### Pensjon (OTP-loven, 2022-regler)
@@ -87,7 +87,7 @@ Ja: «Sykefraværet skal være under 4,0 % innen 31.12.2026. Ansvarlig: daglig l
 - Pause: rett til **minst én pause** ved arbeidstid over 5,5 timer; **minst 30 min samlet** ved arbeidsdag på 8 timer eller mer (§ 10-9)
 
 ### Sykefravær (AML § 4-6 + Ftrl.)
-- Egenmelding: **3 sammenhengende kalenderdager**, maks **4 ganger per 12 måneder** (Ftrl. § 8-24) — dette er lovens minimum
+- Egenmelding: inntil **3 kalenderdager om gangen**, etter minst **to måneders** ansettelse (Ftrl. § 8-24). Arbeidsgiver kan frata retten når den ansatte har hatt minst **fire fravær uten legeerklæring på 12 måneder** (Ftrl. § 8-27)
 - Utvidet egenmeldingsordning omtales KUN hvis bedriftsinformasjonen sier at den er innført
 - Arbeidsgiver betaler sykepenger de første **16 kalenderdagene** (Ftrl. § 8-19)
 - Oppfølgingsplan innen **4 uker**, dialogmøte 1 innen **7 uker**
@@ -117,7 +117,7 @@ alternativ kanal hvis varselet gjelder daglig leder, absolutt vern mot gjengjeld
 - Når et kapittel beskriver en rutine som har et skjema, henvis til skjemaet ved navn
   («meldes på skjemaet Avviksmelding», «dokumenteres i Årlig gjennomgang av HMS-systemet»).
   Koden legger inn en samlet vedleggsoversikt til slutt — du skal ikke lage den selv
-- Ingen «[fyll inn]», «TBD» eller lignende — eneste tillatte plassholder er «[Navn på pensjonsleverandør]»
+- Ingen «[fyll inn]», «TBD» eller lignende — eneste tillatte plassholdere er «[Navn på pensjonsleverandør]» og «[Navn på BHT-leverandør]»
 - Bruk Harveys risikofaktorer og NACE-krav aktivt — gjør innholdet konkret for bransjen
 - Svært høyt risikonivå → konkrete, detaljerte sikkerhetsprosedyrer
 - Kapitlet skal stå alene — en ansatt skal kunne slå opp og finne svaret
